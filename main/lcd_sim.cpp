@@ -1,0 +1,77 @@
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include <stdint.h>
+#include <unistd.h> // pour usleep()
+#include "gps.h"
+#include "lcd_sim.h"
+#include "caracters.h"
+
+uint8_t grid[H][W];
+
+
+int x_start = 0;
+int y_start = 0;
+
+/*
+    Définit le chiffre actuellement modifié dans le LCD. (0-15, de gauche à droite, de haut en bas)
+*/
+void set_cursor(int x, int y) {
+    x_start = x * 5;
+    y_start = y * 8;
+}
+
+void display_lcd() {
+    // Clear terminal
+    printf("\033[H");
+    printf("\n");
+
+    for (int cy = 0; cy < H/8; cy++) {      // lignes de caractères
+        // Ligne horizontale du haut
+        for (int cx = 0; cx < W/5; cx++) {
+            printf("|-----");
+            // printf("      ");
+        }
+        printf("|\n");
+
+        for (int y = 0; y < 8; y++) {     // pixels par caractère
+            for (int cx = 0; cx < W/5; cx++) { // colonnes de caractères
+                printf("|");              // bord gauche du caractère
+                for (int x = 0; x < 5; x++) {
+                    int px = cx * 5 + x;
+                    int py = cy * 8 + y;
+                    printf(grid[py][px] ? "*" : " ");
+                }
+            }
+            printf("|\n");                 // bord droit + fin de ligne
+        }
+    }
+
+    // Ligne horizontale finale
+    for (int cx = 0; cx < W/5; cx++) {
+        printf("|-----");
+    }
+    printf("|\n");
+}
+
+int main() {
+    float angle = 0.0;
+
+    draw_caracter(12, 0, pipe_car);
+    draw_caracter(12, 1, pipe_car);
+
+    while (1) {
+        set_cursor(13, 0);
+        update_compass(angle);
+        // grid[y_start + 0][x_start + 0] = 1;
+        display_lcd();
+
+        angle += 0.1; // incrémente pour rotation
+        if (angle > 2*M_PI)
+            angle -= 2*M_PI;
+
+        usleep(100000); // 100 ms
+    }
+
+    return 0;
+}
