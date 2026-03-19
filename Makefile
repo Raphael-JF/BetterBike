@@ -1,2 +1,4 @@
-all:
-	gcc main/lcd_sim.cpp main/gps.cpp main/caracters.cpp  -lm -o truc && ./truc
+all: local
+
+local:
+	gcc -v -I~/Bureau/Code/I260319-122733-uno/src lcd_sim.h gps.h caracters.h  -lm -o truc && ./truc

@@ -1,12 +1,14 @@
 #include "gps.h"
 #include "lcd_sim.h"
 #include <math.h>
+#include "Arduino.h"
+#include "main.h"
 
 extern int x_start, y_start;
 
 void draw_line(int x0, int y0, int x1, int y1) {
-    int dx = abs(x1 - x0);
-    int dy = abs(y1 - y0);
+    int dx = fabs(x1 - x0);
+    int dy = fabs(y1 - y0);
 
     int sx = (x0 < x1) ? 1 : -1;
     int sy = (y0 < y1) ? 1 : -1;
@@ -39,6 +41,8 @@ void draw_line(int x0, int y0, int x1, int y1) {
 
 void update_compass(float angle) {
 
+    set_cursor(13, 0);
+
     const float cx = W_gps / 2.0;
     const float cy = H_gps / 2.0;
 
@@ -54,16 +58,21 @@ void update_compass(float angle) {
     const float x = cx + tail_length*dx;
     const float y = cy + tail_length*dy;
     if(angle < M_PI/2) {
+        Serial.println("angle < 90°");
         draw_line(cx, cy - 1, x, y);
     }
     else if(angle < M_PI) {
         draw_line(cx - 1, cy - 1, x, y);
+        Serial.println("angle < 180°");
+
     }
     else if(angle < 3*M_PI/2) {
         draw_line(cx - 1, cy, x, y);
+        Serial.println("angle < 270°");
     }
     else{
         draw_line(cx, cy, x, y);
+        Serial.println("angle < 360°");
     }
 
 }

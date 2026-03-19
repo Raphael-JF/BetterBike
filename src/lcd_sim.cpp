@@ -2,7 +2,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-#include <unistd.h> // pour usleep()
+#include <Arduino.h>
 #include "gps.h"
 #include "lcd_sim.h"
 #include "caracters.h"
@@ -70,7 +70,7 @@ int main() {
         if (angle > 2*M_PI)
             angle -= 2*M_PI;
 
-        usleep(100000); // 100 ms
+        delay(100); // 100 ms
     }
 
     return 0;
