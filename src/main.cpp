@@ -13,6 +13,9 @@ rgb_lcd lcd;
 uint8_t grid[H][W];
 int x_start = 0;
 int y_start = 0;
+float last_angle = -1000;
+char time_str[6] = "99:99";
+
 
 
 void set_cursor(int x, int y){
@@ -21,21 +24,6 @@ void set_cursor(int x, int y){
 }
 
 
-void setup() {
-    // Serial.begin(115200); // esp
-    Serial.begin(9600); // arduino
-    // Wire.begin();
-    // set up the lcd's number of columns and rows:
-    Serial.println("Starting LCD simulation...");
-    lcd.begin(16, 2);
-    lcd.setRGB(255, 255, 255);
-
-    // lcd.print("Hello World!");
-
-    update_compass(0);
-    lcd_respring_compass();
-
-}
 
 void lcd_respring_compass() {
     uint8_t c00[8], c10[8], c20[8];
@@ -71,7 +59,27 @@ void lcd_respring_compass() {
 }
 
 
-float last_angle = -1000;
+
+void setup() {
+    // Serial.begin(115200); // esp
+    Serial.begin(9600); // arduino
+    // Wire.begin();
+    // set up the lcd's number of columns and rows:
+    Serial.println("Starting LCD simulation...");
+    lcd.begin(16, 2);
+    lcd.setRGB(127, 127, 127);
+    lcd.setCursor(12, 0);
+    lcd.print("|");
+    lcd.setCursor(12, 1);
+    lcd.print("|");
+
+    // lcd.print("Hello World!");
+
+    update_compass(0);
+    lcd_respring_compass();
+
+}
+
 
 void loop() {
 
@@ -85,6 +93,16 @@ void loop() {
         lcd_respring_compass();
         last_angle = angle;
     }
+    // get the current hour in 24h format (hh:mm)
+    char time_str[6];
+    
+    int hours = (millis() / 3600000) % 24;
+    int minutes = (millis() / 60000) % 60;
+    sprintf(time_str, "%02d:%02d\n", hours, minutes);
+    lcd.setCursor(0, 0);
+    lcd.print(time_str);
+
+
     // Serial.println("Starting LCD simulation...");
 
     delay(500);
