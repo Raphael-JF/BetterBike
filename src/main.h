@@ -12,7 +12,6 @@
 extern uint8_t grid[H][W];
 
 
-void set_cursor(int x, int y);
 void lcd_respring_compass();
 void display_lcd();
 #endif // MAIN_H
