@@ -143,24 +143,3 @@ uint8_t *digits_car[10] = {
     five_car, six_car, seven_car, eight_car, nine_car
 };
 
-void draw_caracter(int x, int y, uint8_t char_data[8]) {
-    set_cursor(x, y);
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 5; j++) {
-            if (char_data[i] & (1 << (4 - j))) {
-                grid[y_start + i][x_start + j] = 1;
-            }
-        }
-    }
-}
-
-void extract_char(int x, int y, uint8_t out[8]) {
-    for (int i = 0; i < 8; i++) {
-        out[i] = 0;
-        for (int j = 0; j < 5; j++) {
-            if (grid[y*8 + i][x*5 + j]) {
-                out[i] |= (1 << (4 - j));
-            }
-        }
-    }
-}

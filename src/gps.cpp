@@ -18,7 +18,7 @@ void draw_line(int x0, int y0, int x1, int y1) {
     while (1) {
         // allume pixel
         if (x0 >= 0 && x0 < W_gps && y0 >= 0 && y0 < H_gps)
-            grid[y0 + y_start][x0 + x_start] = 1;
+            grid_set(x0 + x_start, y0 + y_start, 1);
 
         if (x0 == x1 && y0 == y1)
             break;
@@ -48,7 +48,7 @@ void update_compass(float angle) {
 
     for (int y = 0; y < H_gps; y++) {
         for (int x = 0; x < W_gps; x++) {
-            grid[y + y_start][x + x_start] = 0;
+            grid_set(x + x_start, y + y_start, 0);
         }
     }
     float dx = cos(angle);

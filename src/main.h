@@ -9,10 +9,19 @@
 #define W 80 // 5*16
 #define H 16 // 8*2 
 
-extern uint8_t grid[H][W];
+typedef struct {
+	uint8_t bits[(W * H + 7) / 8];
+} PixelGrid;
+
+extern PixelGrid grid;
+
+void grid_set(int x, int y, uint8_t value);
+uint8_t grid_get(int x, int y);
 
 
 void set_cursor(int x, int y);
+void draw_caracter(int x, int y, uint8_t char_data[8]);
+void extract_char(int x, int y, uint8_t out[8]);
 void lcd_respring_compass();
 void display_lcd();
 #endif // MAIN_H
