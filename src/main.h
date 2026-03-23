@@ -19,9 +19,6 @@ void grid_set(int x, int y, uint8_t value);
 uint8_t grid_get(int x, int y);
 
 
-void set_cursor(int x, int y);
-void draw_caracter(int x, int y, uint8_t char_data[8]);
-void extract_char(int x, int y, uint8_t out[8]);
 void lcd_respring_compass();
 void display_lcd();
 #endif // MAIN_H

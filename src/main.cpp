@@ -8,109 +8,134 @@
 
 #include "main.h"
 #include "gps.h"
+#include "utc.h"
 
 rgb_lcd lcd;
 PixelGrid grid;
 int x_start = 0;
 int y_start = 0;
+float last_angle = -1000;
+float angle = 0;
 
-typedef struct {
-    int sx;
-    int sy;
-    int ex;
-    int ey;
-} CompassSignature;
+// État visuel GPS (icône validation / négation)
+bool is_gps_active = 0;
 
-CompassSignature last_signature = {0, 0, 0, 0};
+// Heure actuellement affichée à l'écran (normalisée 0..23)
+int hours = -1;
+// Minute actuellement affichée à l'écran (normalisée 0..59)
+int minutes = -1;
 
-static CompassSignature build_compass_signature(float angle) {
-    const float cx = W_gps / 2.0;
-    const float cy = H_gps / 2.0;
-    const int tail_length = W_gps < H_gps ? W_gps / 2 : H_gps / 2;
+// Dernière heure reçue de la source GPS (ou -1 si aucune donnée)
+int fresh_hours = -1;
+// Dernière minute reçue de la source GPS (ou -1 si aucune donnée)
+int fresh_minutes = -1;
 
-    const float dx = cos(angle);
-    const float dy = -sin(angle);
-    const int ex = (int)(cx + tail_length * dx);
-    const int ey = (int)(cy + tail_length * dy);
 
-    int sx;
-    int sy;
-    if (angle < M_PI / 2) {
-        sx = (int)cx;
-        sy = (int)cy - 1;
-    } else if (angle < M_PI) {
-        sx = (int)cx - 1;
-        sy = (int)cy - 1;
-    } else if (angle < 3 * M_PI / 2) {
-        sx = (int)cx - 1;
-        sy = (int)cy;
-    } else {
-        sx = (int)cx;
-        sy = (int)cy;
-    }
 
-    CompassSignature signature = {sx, sy, ex, ey};
-    return signature;
+// Dernière valeur GPS prise en compte pour détecter un nouveau timestamp GPS
+int last_fresh_hours = -1;
+int last_fresh_minutes = -1;
+
+// Base temporelle GPS retenue pour faire avancer l'heure avec millis()
+int gps_base_hour = -1;
+int gps_base_minutes = -1;
+// Valeur de millis() au moment où gps_base_hour/gps_base_minutes ont été synchronisées
+unsigned long gps_sync_millis = 0;
+
+
+int utc_year = 2026;
+int utc_month = 4;
+int utc_day = 21;
+
+
+void lcd_respring_gps_status() {
+    lcd.setCursor(10, 0);
+    lcd.write(byte(is_gps_active ? 6 : 7));
 }
 
-static bool same_signature(CompassSignature a, CompassSignature b) {
-    return a.sx == b.sx && a.sy == b.sy && a.ex == b.ex && a.ey == b.ey;
-}
 
-void grid_set(int x, int y, uint8_t value) {
-    if (x < 0 || x >= W || y < 0 || y >= H) {
+
+void lcd_respring_time(int new_hours, int new_minutes) {
+    new_hours = (new_hours % 24 + 24) % 24;
+    new_minutes = (new_minutes % 60 + 60) % 60;
+
+    if (hours == new_hours && minutes == new_minutes) {
         return;
     }
 
-    const int index = y * W + x;
-    const int byte_index = index >> 3;
-    const uint8_t mask = (uint8_t)(1u << (index & 7));
-
-    if (value) {
-        grid.bits[byte_index] |= mask;
-    } else {
-        grid.bits[byte_index] &= (uint8_t)~mask;
-    }
-}
-
-uint8_t grid_get(int x, int y) {
-    if (x < 0 || x >= W || y < 0 || y >= H) {
-        return 0;
-    }
-
-    const int index = y * W + x;
-    const int byte_index = index >> 3;
-    const uint8_t mask = (uint8_t)(1u << (index & 7));
-    return (grid.bits[byte_index] & mask) ? 1 : 0;
+    hours = new_hours;
+    minutes = new_minutes;
+    // if(myGPS.available()){
+        // utc_year = myGPS.utc_year;
+        // utc_month = myGPS.utc_month;
+        // utc_day = myGPS.utc_day;
+    // }   
+    
+    int hours_local = hours;
+    int minutes_local = minutes;
+    utc_to_local(utc_day, utc_month, utc_year, hours, minutes, &hours_local, &minutes_local);
+    char time_str[6];
+    snprintf(time_str, sizeof(time_str), "%02d:%02d", hours_local, minutes_local);
+    lcd.setCursor(0, 0);
+    lcd.print(time_str);
 }
 
 
-void set_cursor(int x, int y){
-    x_start = x * 5;
-    y_start = y * 8;
-}
 
-void draw_caracter(int x, int y, uint8_t char_data[8]) {
-    set_cursor(x, y);
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 5; j++) {
-            if (char_data[i] & (1 << (4 - j))) {
-                grid_set(x_start + j, y_start + i, 1);
-            }
+void update_time() {
+    if (fresh_hours != -1 && fresh_minutes != -1) {
+        if (fresh_hours != last_fresh_hours || fresh_minutes != last_fresh_minutes) {
+            gps_base_hour = fresh_hours;
+            gps_base_minutes = fresh_minutes;
+            gps_sync_millis = millis();
+            last_fresh_hours = fresh_hours;
+            last_fresh_minutes = fresh_minutes;
         }
+
+        if (gps_base_hour != -1 && gps_base_minutes != -1) {
+            unsigned long elapsed_minutes = (millis() - gps_sync_millis) / 60000UL;
+            int base_total_minutes = gps_base_hour * 60 + gps_base_minutes;
+            int current_total_minutes = (base_total_minutes + (int)elapsed_minutes) % (24 * 60);
+
+            int current_hours = current_total_minutes / 60;
+            int current_minutes = current_total_minutes % 60;
+            lcd_respring_time(current_hours, current_minutes);
+        }
+        return;
     }
+
+    last_fresh_hours = -1;
+    last_fresh_minutes = -1;
+
+    // unsigned long total_minutes = millis() / 60000;
+    // int current_hours = (total_minutes / 60) % 24;
+    // int current_minutes = total_minutes % 60;
+    // lcd_respring_time(current_hours, current_minutes);
 }
 
-void extract_char(int x, int y, uint8_t out[8]) {
-    for (int i = 0; i < 8; i++) {
-        out[i] = 0;
-        for (int j = 0; j < 5; j++) {
-            if (grid_get(x * 5 + j, y * 8 + i)) {
-                out[i] |= (1 << (4 - j));
-            }
-        }
-    }
+
+
+
+void lcd_respring_compass() {
+    uint8_t c00[8], c10[8], c20[8];
+    uint8_t c01[8], c11[8], c21[8];
+    extract_char(13, 0, c00);
+    extract_char(14, 0, c10);
+    extract_char(15, 0, c20);
+    extract_char(13, 1, c01);
+    extract_char(14, 1, c11);
+    extract_char(15, 1, c21);
+    Serial.println(c00[0], HEX);
+
+
+    lcd.createChar(0, c00);
+    lcd.createChar(1, c10);
+    lcd.createChar(2, c20);
+    lcd.createChar(3, c01);
+    lcd.createChar(4, c11);
+    lcd.createChar(5, c21);
 }
+
 
 
 void setup() {
@@ -118,63 +143,92 @@ void setup() {
     Serial.begin(9600); // arduino
     // Wire.begin();
     // set up the lcd's number of columns and rows:
-    Serial.println("Starting LCD simulation...");
     lcd.begin(16, 2);
-    lcd.setRGB(255, 255, 255);
+    lcd.setRGB(127, 127, 127);
 
-    // lcd.print("Hello World!");
 
+    lcd.setCursor(0, 0);
+    lcd.print("--:-- GPS");
+
+    uint8_t gps_valid_char[8] = {
+        0b00000,
+        0b00001,
+        0b00010,
+        0b10100,
+        0b01000,
+        0b00000,
+        0b00000,
+        0b00000
+    };
+
+    uint8_t gps_invalid_char[8] = {
+        0b00000,
+        0b10001,
+        0b01010,
+        0b00100,
+        0b01010,
+        0b10001,
+        0b00000,
+        0b00000
+    };
+
+    lcd.createChar(6, gps_valid_char);
+    lcd.createChar(7, gps_invalid_char);
+    lcd_respring_gps_status();
+
+    lcd.setCursor(12, 0);
+    lcd.print("|");
+    lcd.setCursor(12, 1);
+    lcd.print("|");
+
+    lcd.setCursor(13, 0);
+
+    lcd.write(byte(0));
+    lcd.write(byte(1));
+    lcd.write(byte(2));
+    lcd.setCursor(13, 1);
+    lcd.write(byte(3));
+    lcd.write(byte(4));
+    lcd.write(byte(5));
 
     update_compass(0);
     lcd_respring_compass();
-    last_signature = build_compass_signature(0);
 
 }
 
-void lcd_respring_compass() {
-    uint8_t current_chars[6][8];
-    extract_char(13, 0, current_chars[0]);
-    extract_char(14, 0, current_chars[1]);
-    extract_char(15, 0, current_chars[2]);
-    extract_char(13, 1, current_chars[3]);
-    extract_char(14, 1, current_chars[4]);
-    extract_char(15, 1, current_chars[5]);
 
-    const int char_x[6] = {13, 14, 15, 13, 14, 15};
-    const int char_y[6] = {0, 0, 0, 1, 1, 1};
-
-    for (int i = 0; i < 6; i++) {
-        const bool changed = memcmp(current_chars[i], last_chars[i], 8) != 0;
-        if (!changed) {
-            continue;
-        }
-
-        lcd.createChar(i, current_chars[i]);
-        lcd.setCursor(char_x[i], char_y[i]);
-        lcd.write((uint8_t)i);
-        memcpy(last_chars[i], current_chars[i], 8);
-    }
-}
-
-
-float angle = 0;
 void loop() {
 
-    angle = angle + 0.1;
+    angle += 0.5;
     if(angle > 2*M_PI) {
-        angle = 0;
+        angle -= 2*M_PI;
     }
-    
 
-    const CompassSignature signature = build_compass_signature(angle);
-    if (!same_signature(signature, last_signature)) {
+
+    if (fabs(angle - last_angle) > 0.05) {
+        Serial.print("Angle: ");
+        Serial.println(angle);
+        if (is_gps_active) {
+            clear_compass_for_gps();
+        }
+        else{
+            clear_compass_for_magnetometer();
+        }
         update_compass(angle);
         lcd_respring_compass();
         last_signature = signature;
     }
 
+    
+
+    update_time();
+    
+    
+
+    // Serial.println("Starting LCD simulation...");
+
     delay(500);
+    is_gps_active = 1;
+    fresh_hours = 12;
+    fresh_minutes = 34;
 }
-/*********************************************************************************************************
-    END FILE
-*********************************************************************************************************/
