@@ -3,6 +3,7 @@
 
 #include <Wire.h>
 #include "Arduino.h"
+#include <HMC5883L.h>
 #include "rgb_lcd.h"
 
 #include "main.h"
@@ -11,6 +12,10 @@
 #include "utc.h"
 
 rgb_lcd lcd;
+HMC5883L compass;
+MagnetometerScaled valueOffset;
+
+
 uint8_t grid[H][W];
 int x_start = 0;
 int y_start = 0;
@@ -125,7 +130,7 @@ void lcd_respring_compass() {
     extract_char(13, 1, c01);
     extract_char(14, 1, c11);
     extract_char(15, 1, c21);
-    Serial.println(c00[0], HEX);
+    // Serial.println(c00[0], HEX);
 
 
     lcd.createChar(0, c00);
@@ -194,6 +199,9 @@ void setup() {
     update_compass(0);
     lcd_respring_compass();
 
+
+    int error = compass.setScale(1.3); // Set the scale of the compass.
+
 }
 
 
@@ -206,8 +214,6 @@ void loop() {
 
 
     if (fabs(angle - last_angle) > 0.05) {
-        Serial.print("Angle: ");
-        Serial.println(angle);
         if (is_gps_active) {
             clear_compass_for_gps();
         }
@@ -223,8 +229,22 @@ void loop() {
 
     update_time();
     
+    // Retrive the raw values from the compass (not scaled).
+    MagnetometerRaw raw = compass.readRawAxis();
+    // Retrived the scaled values from the compass (scaled to the configured scale).
+    MagnetometerScaled scaled = compass.readScaledAxis();
     
-
+    scaled.XAxis -= valueOffset.XAxis;
+    scaled.YAxis -= valueOffset.YAxis;
+    scaled.ZAxis -= valueOffset.ZAxis;
+    
+    // Values are accessed like so:
+    int MilliGauss_OnThe_XAxis = scaled.XAxis;// (or YAxis, or ZAxis)
+    Serial.print(raw.XAxis);
+    Serial.print(" ");
+    Serial.print(raw.YAxis);
+    Serial.print(" ");
+    Serial.println(raw.ZAxis);
     // Serial.println("Starting LCD simulation...");
 
     delay(500);

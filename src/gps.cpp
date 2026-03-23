@@ -91,21 +91,17 @@ void update_compass(float angle) {
     const float x = cx + tail_length*dx;
     const float y = cy + tail_length*dy;
     if(angle < M_PI/2) {
-        Serial.println("angle < 90°");
         draw_line(cx, cy - 1, x, y);
     }
     else if(angle < M_PI) {
         draw_line(cx - 1, cy - 1, x, y);
-        Serial.println("angle < 180°");
 
     }
     else if(angle < 3*M_PI/2) {
         draw_line(cx - 1, cy, x, y);
-        Serial.println("angle < 270°");
     }
     else{
         draw_line(cx, cy, x, y);
-        Serial.println("angle < 360°");
     }
 
 }
