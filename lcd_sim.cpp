@@ -7,7 +7,7 @@
 #include "lcd_sim.h"
 #include "caracters.h"
 
-uint8_t grid[H][W];
+uint8_t compass_grid[H][W];
 
 void display_lcd() {
     // Clear terminal
@@ -28,7 +28,7 @@ void display_lcd() {
                 for (int x = 0; x < 5; x++) {
                     int px = cx * 5 + x;
                     int py = cy * 8 + y;
-                    printf(grid[py][px] ? "*" : " ");
+                    printf(compass_grid[py][px] ? "*" : " ");
                 }
             }
             printf("|\n");                 // bord droit + fin de ligne
@@ -51,7 +51,7 @@ int main() {
     while (1) {
         set_cursor(13, 0);
         update_compass(angle);
-        // grid[y_start + 0][x_start + 0] = 1;
+        // compass_grid[y_start + 0][x_start + 0] = 1;
         display_lcd();
 
         angle += 0.1; // incrémente pour rotation

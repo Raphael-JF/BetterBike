@@ -4,7 +4,7 @@
 #include "lcd_sim.h"
 
 extern int x_start, y_start;
-extern uint8_t grid[H][W];
+extern uint8_t compass_grid[H][W];
 
 uint8_t dash_car[8] = {
     0b00000,
@@ -148,7 +148,7 @@ void draw_caracter(int x, int y, uint8_t char_data[8]) {
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 5; j++) {
             if (char_data[i] & (1 << (4 - j))) {
-                grid[13*5 + i][13*8 + j] = 1;
+                compass_grid[13*5 + i][13*8 + j] = 1;
             }
         }
     }

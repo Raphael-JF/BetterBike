@@ -9,7 +9,7 @@
 #define W 80 // 5*16
 #define H 16 // 8*2 
 
-extern uint8_t grid[H][W];
+extern uint8_t compass_grid[H][W];
 
 
 void set_cursor(int x, int y);

@@ -7,8 +7,11 @@ struct time_base current_time = {-1, -1};
 // Dernière base temporelle GPS reçue
 struct time_base last_got_gps_time = {-1, -1};
 
-// Dernière base temporelle GPS prise en compte pour faire avancer l'heure avec millis()
+// Dernière base temporelle GPS prise en compte pour faire avancer l'heure avec millis(). Elle est en UTC.
 struct time_base last_used_gps_time = {-1, -1};
+
+// Dernière base temporelle GPS prise en compte pour faire avancer l'heure avec millis(). Elle est en fuseau local français.
+struct time_base last_used_gps_time_local = {-1, -1};
 
 // Valeur de millis() au moment où gps_base_hour et gps_base_minutes ont été synchronisées
 unsigned long gps_sync_millis = 0;
@@ -22,27 +25,22 @@ int utc_day = 21;
 void update_time() {
     if (last_got_gps_time.hours != -1 && last_got_gps_time.minutes != -1) {
 
-        struct time_base time_offset = {-1, -1};
-
-        if (last_got_gps_time.hours != last_used_gps_time.hours || last_got_gps_time.minutes != last_used_gps_time.minutes) {
+        if (last_got_gps_time.minutes != last_used_gps_time.minutes || last_got_gps_time.hours != last_used_gps_time.hours) {
             gps_sync_millis = millis();
 
-            time_offset = utc_to_local(utc_day, utc_month, utc_year, last_got_gps_time);
+            last_used_gps_time_local = utc_to_local(utc_day, utc_month, utc_year, last_got_gps_time);
 
             last_used_gps_time = last_got_gps_time;
         }
 
-        if (time_offset.hours != -1 && time_offset.minutes != -1) {
+        if (last_used_gps_time_local.hours != -1 && last_used_gps_time_local.minutes != -1) {
             unsigned long elapsed_minutes = (millis() - gps_sync_millis) / 60000UL;
-            int base_total_minutes = time_offset.hours * 60 + time_offset.minutes;
+            int base_total_minutes = last_used_gps_time_local.hours * 60 + last_used_gps_time_local.minutes;
             int current_total_minutes = (base_total_minutes + (int)elapsed_minutes) % (24 * 60);
 
             current_time.hours = current_total_minutes / 60;
             current_time.minutes = current_total_minutes % 60;
         }
-    } else{
-        last_used_gps_time.hours = -1;
-        last_used_gps_time.minutes = -1;
     }
 
 

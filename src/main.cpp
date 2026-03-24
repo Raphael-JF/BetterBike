@@ -5,14 +5,9 @@
 #include "Arduino.h"
 
 #include "main.h"
-#include "caracters.h"
 #include "gps/gps_core.h"
-#include "gps/gps_draw.h"
 #include "time/time_manager.h"
 #include "lcd/lcd_core.h"
-
-float last_angle = -1000;
-float angle = 0;
 
 
 
@@ -74,7 +69,6 @@ void setup() {
     lcd.write(byte(4));
     lcd.write(byte(5));
 
-    update_compass(0);
     lcd_respring_compass();
 
 
@@ -83,22 +77,21 @@ void setup() {
 
 void loop() {
 
-    angle += 0.5;
-    if(angle > 2*M_PI) {
-        angle -= 2*M_PI;
+    bearing_to_display += 0.5;
+    if(bearing_to_display > 2*M_PI) {
+        bearing_to_display -= 2*M_PI;
     }
 
 
-    if (fabs(angle - last_angle) > 0.05) {
+    if (fabs(bearing_to_display - last_bearing_to_display) > 0.05) {
         if (is_gps_active) {
             clear_compass_for_gps();
         }
         else{
             clear_compass_for_magnetometer();
         }
-        update_compass(angle);
         lcd_respring_compass();
-        last_angle = angle;
+        last_bearing_to_display = bearing_to_display;
     }
 
     
