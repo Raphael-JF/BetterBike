@@ -1,7 +1,6 @@
 #ifndef GPS_H
 #define GPS_H
 
-#include <stdint.h>
 #define W_gps 15
 #define H_gps 16
 

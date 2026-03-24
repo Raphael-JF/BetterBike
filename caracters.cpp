@@ -148,19 +148,9 @@ void draw_caracter(int x, int y, uint8_t char_data[8]) {
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 5; j++) {
             if (char_data[i] & (1 << (4 - j))) {
-                grid[y_start + i][x_start + j] = 1;
+                grid[13*5 + i][13*8 + j] = 1;
             }
         }
     }
 }
 
-void extract_char(int x, int y, uint8_t out[8]) {
-    for (int i = 0; i < 8; i++) {
-        out[i] = 0;
-        for (int j = 0; j < 5; j++) {
-            if (grid[y*8 + i][x*5 + j]) {
-                out[i] |= (1 << (4 - j));
-            }
-        }
-    }
-}

@@ -1,9 +1,9 @@
-#include "gps.h"
+#include "gps/gps_draw.h"
 #include "lcd_sim.h"
 #include <math.h>
 #include "stdint.h"
-#include "Arduino.h"
 #include "main.h"
+
 
 
 void draw_line(int x0, int y0, int x1, int y1) {

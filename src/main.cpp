@@ -3,143 +3,21 @@
 
 #include <Wire.h>
 #include "Arduino.h"
-#include <HMC5883L.h>
-#include "rgb_lcd.h"
 
 #include "main.h"
 #include "caracters.h"
-#include "gps.h"
-#include "utc.h"
+#include "gps/gps_core.h"
+#include "gps/gps_draw.h"
+#include "time/time_manager.h"
+#include "lcd/lcd_core.h"
 
-rgb_lcd lcd;
-HMC5883L compass;
-MagnetometerScaled valueOffset;
-
-
-uint8_t grid[H][W];
-int x_start = 0;
-int y_start = 0;
 float last_angle = -1000;
 float angle = 0;
 
-// État visuel GPS (icône validation / négation)
-bool is_gps_active = 0;
-
-// Heure actuellement affichée à l'écran (normalisée 0..23)
-int hours = -1;
-// Minute actuellement affichée à l'écran (normalisée 0..59)
-int minutes = -1;
-
-// Dernière heure reçue de la source GPS (ou -1 si aucune donnée)
-int fresh_hours = -1;
-// Dernière minute reçue de la source GPS (ou -1 si aucune donnée)
-int fresh_minutes = -1;
-
-
-
-// Dernière valeur GPS prise en compte pour détecter un nouveau timestamp GPS
-int last_fresh_hours = -1;
-int last_fresh_minutes = -1;
-
-// Base temporelle GPS retenue pour faire avancer l'heure avec millis()
-int gps_base_hour = -1;
-int gps_base_minutes = -1;
-// Valeur de millis() au moment où gps_base_hour/gps_base_minutes ont été synchronisées
-unsigned long gps_sync_millis = 0;
-
-
-int utc_year = 2026;
-int utc_month = 4;
-int utc_day = 21;
-
-
-void lcd_respring_gps_status() {
-    lcd.setCursor(10, 0);
-    lcd.write(byte(is_gps_active ? 6 : 7));
-}
-
-
-
-void lcd_respring_time(int new_hours, int new_minutes) {
-    new_hours = (new_hours % 24 + 24) % 24;
-    new_minutes = (new_minutes % 60 + 60) % 60;
-
-    if (hours == new_hours && minutes == new_minutes) {
-        return;
-    }
-
-    hours = new_hours;
-    minutes = new_minutes;
-    // if(myGPS.available()){
-        // utc_year = myGPS.utc_year;
-        // utc_month = myGPS.utc_month;
-        // utc_day = myGPS.utc_day;
-    // }   
-    
-    int hours_local = hours;
-    int minutes_local = minutes;
-    utc_to_local(utc_day, utc_month, utc_year, hours, minutes, &hours_local, &minutes_local);
-    char time_str[6];
-    snprintf(time_str, sizeof(time_str), "%02d:%02d", hours_local, minutes_local);
-    lcd.setCursor(0, 0);
-    lcd.print(time_str);
-}
-
-
-
-void update_time() {
-    if (fresh_hours != -1 && fresh_minutes != -1) {
-        if (fresh_hours != last_fresh_hours || fresh_minutes != last_fresh_minutes) {
-            gps_base_hour = fresh_hours;
-            gps_base_minutes = fresh_minutes;
-            gps_sync_millis = millis();
-            last_fresh_hours = fresh_hours;
-            last_fresh_minutes = fresh_minutes;
-        }
-
-        if (gps_base_hour != -1 && gps_base_minutes != -1) {
-            unsigned long elapsed_minutes = (millis() - gps_sync_millis) / 60000UL;
-            int base_total_minutes = gps_base_hour * 60 + gps_base_minutes;
-            int current_total_minutes = (base_total_minutes + (int)elapsed_minutes) % (24 * 60);
-
-            int current_hours = current_total_minutes / 60;
-            int current_minutes = current_total_minutes % 60;
-            lcd_respring_time(current_hours, current_minutes);
-        }
-        return;
-    }
-
-    last_fresh_hours = -1;
-    last_fresh_minutes = -1;
-
-    // unsigned long total_minutes = millis() / 60000;
-    // int current_hours = (total_minutes / 60) % 24;
-    // int current_minutes = total_minutes % 60;
-    // lcd_respring_time(current_hours, current_minutes);
-}
 
 
 
 
-void lcd_respring_compass() {
-    uint8_t c00[8], c10[8], c20[8];
-    uint8_t c01[8], c11[8], c21[8];
-    extract_char(13, 0, c00);
-    extract_char(14, 0, c10);
-    extract_char(15, 0, c20);
-    extract_char(13, 1, c01);
-    extract_char(14, 1, c11);
-    extract_char(15, 1, c21);
-    // Serial.println(c00[0], HEX);
-
-
-    lcd.createChar(0, c00);
-    lcd.createChar(1, c10);
-    lcd.createChar(2, c20);
-    lcd.createChar(3, c01);
-    lcd.createChar(4, c11);
-    lcd.createChar(5, c21);
-}
 
 
 
@@ -200,8 +78,6 @@ void setup() {
     lcd_respring_compass();
 
 
-    int error = compass.setScale(1.3); // Set the scale of the compass.
-
 }
 
 
@@ -226,29 +102,15 @@ void loop() {
     }
 
     
-
+    struct time_base old_time = current_time;
     update_time();
-    
-    // Retrive the raw values from the compass (not scaled).
-    MagnetometerRaw raw = compass.readRawAxis();
-    // Retrived the scaled values from the compass (scaled to the configured scale).
-    MagnetometerScaled scaled = compass.readScaledAxis();
-    
-    scaled.XAxis -= valueOffset.XAxis;
-    scaled.YAxis -= valueOffset.YAxis;
-    scaled.ZAxis -= valueOffset.ZAxis;
-    
-    // Values are accessed like so:
-    int MilliGauss_OnThe_XAxis = scaled.XAxis;// (or YAxis, or ZAxis)
-    Serial.print(raw.XAxis);
-    Serial.print(" ");
-    Serial.print(raw.YAxis);
-    Serial.print(" ");
-    Serial.println(raw.ZAxis);
+    if (current_time.minutes != old_time.minutes || current_time.hours != old_time.hours){
+        lcd_respring_time();
+    }
+
     // Serial.println("Starting LCD simulation...");
 
     delay(500);
     is_gps_active = 1;
-    fresh_hours = 12;
-    fresh_minutes = 34;
+    last_got_gps_time = {12, 34};
 }

@@ -1,0 +1,1 @@
+extern bool is_gps_active;

@@ -1,0 +1,1 @@
+bool is_gps_active = 0;

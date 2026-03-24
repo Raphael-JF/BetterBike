@@ -9,18 +9,6 @@
 
 uint8_t grid[H][W];
 
-
-int x_start = 0;
-int y_start = 0;
-
-/*
-    Définit le chiffre actuellement modifié dans le LCD. (0-15, de gauche à droite, de haut en bas)
-*/
-void set_cursor(int x, int y) {
-    x_start = x * 5;
-    y_start = y * 8;
-}
-
 void display_lcd() {
     // Clear terminal
     printf("\033[H");
