@@ -25,7 +25,7 @@ void extract_char(int x, int y, uint8_t out[8]) {
 }
 
 void lcd_respring_gps_status() {
-    lcd.setCursor(10, 0);
+    lcd.setCursor(11, 0);
     lcd.write(byte(is_gps_active ? 6 : 7));
 }
 
