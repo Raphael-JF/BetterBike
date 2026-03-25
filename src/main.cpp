@@ -83,7 +83,7 @@ void loop() {
     }
 
     // 2. Utiliser les données seulement si dispo
-    if (gps.location.isUpdated()) {
+    if (gps.location.isValid()) {
         Serial.println(gps.location.lat(), 6);
     }
 
