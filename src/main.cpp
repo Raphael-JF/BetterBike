@@ -77,7 +77,18 @@ void setup() {
 
 void loop() {
 
-    bearing_to_display += 0.025;
+    // 1. Toujours lire le GPS
+    while (gpsSerial.available()) {
+        gps.encode(gpsSerial.read());
+    }
+
+    // 2. Utiliser les données seulement si dispo
+    if (gps.location.isUpdated()) {
+        Serial.println(gps.location.lat(), 6);
+    }
+
+
+    bearing_to_display += 0.25;
     if(bearing_to_display > 2*M_PI) {
         bearing_to_display -= 2*M_PI;
     }
@@ -100,10 +111,9 @@ void loop() {
     if (current_time.minutes != old_time.minutes || current_time.hours != old_time.hours){
         lcd_respring_time();
     }
+     
 
-
-
-    // delay(500);
+    delay(50);
     is_gps_active = 1;
     // last_got_gps_time = {12, 34};
 }
