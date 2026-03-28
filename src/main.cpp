@@ -75,14 +75,28 @@ void loop() {
 
     // 1. Toujours lire le GPS
     while (gpsSerial.available()) {
+        Serial.println("Tic");
         gps.encode(gpsSerial.read());
     }
+    Serial.println("Tac");
 
     // 2. Utiliser les données seulement si dispo
     if (gps.location.isValid()) {
         Serial.println(gps.location.lat(), 6);
         Serial.println(gps.location.lng(), 6);
     }
+
+    if (gps.time.isValid()) {
+        last_got_gps_time.hours = gps.time.hour();
+        last_got_gps_time.minutes = gps.time.minute();
+    }
+
+    if(utc_day == 0 && gps.date.isValid()) {
+        utc_day = gps.date.day();
+        utc_month = gps.date.month();
+        utc_year = gps.date.year();
+    }
+
 
 
     bearing_to_display += 0.25;

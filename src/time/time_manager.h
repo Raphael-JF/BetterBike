@@ -3,8 +3,8 @@
 
 
 struct time_base{
-    int hours;
-    int minutes;
+    uint8_t hours;
+    uint8_t minutes;
 };
 
 // Base temporelle actuellement affichée à l'écran (en UTC)
@@ -21,15 +21,15 @@ extern struct time_base last_used_gps_time;
 extern unsigned long gps_sync_millis;
 
 
-extern int utc_year;
-extern int utc_month;
-extern int utc_day;
+extern uint16_t utc_year;
+extern uint8_t utc_month;
+extern uint8_t utc_day;
 
 
 /*
     Actualise en coulisse l'heure à afficher, en fuseau local Français. Ne gère pas l'affichage
 */
 void update_time(void);
-struct time_base utc_to_local(int day, int month, int year, struct time_base time_utc);
+struct time_base utc_to_local(uint8_t day, uint8_t month, uint16_t year, struct time_base time_utc);
 
 #endif // TIME_MANAGER__H

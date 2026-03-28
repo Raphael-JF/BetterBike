@@ -2,28 +2,28 @@
 #include "time/time_manager.h"
 
 // Base temporelle actuellement affichée à l'écran (en UTC)
-struct time_base current_time = {-1, -1};
+struct time_base current_time = {100, 100};
 
 // Dernière base temporelle GPS reçue
-struct time_base last_got_gps_time = {-1, -1};
+struct time_base last_got_gps_time = {100, 100};
 
 // Dernière base temporelle GPS prise en compte pour faire avancer l'heure avec millis(). Elle est en UTC.
-struct time_base last_used_gps_time = {-1, -1};
+struct time_base last_used_gps_time = {100, 100};
 
 // Dernière base temporelle GPS prise en compte pour faire avancer l'heure avec millis(). Elle est en fuseau local français.
-struct time_base last_used_gps_time_local = {-1, -1};
+struct time_base last_used_gps_time_local = {100, 100};
 
 // Valeur de millis() au moment où gps_base_hour et gps_base_minutes ont été synchronisées
 unsigned long gps_sync_millis = 0;
 
-int utc_year = 2026;
-int utc_month = 4;
-int utc_day = 21;
+uint16_t utc_year = 2026;
+uint8_t utc_month = 4;
+uint8_t utc_day = 0;
 
 
 
 void update_time() {
-    if (last_got_gps_time.hours != -1 && last_got_gps_time.minutes != -1) {
+    if (last_got_gps_time.hours != 100 && last_got_gps_time.minutes != 100) {
 
         if (last_got_gps_time.minutes != last_used_gps_time.minutes || last_got_gps_time.hours != last_used_gps_time.hours) {
             gps_sync_millis = millis();
@@ -33,10 +33,10 @@ void update_time() {
             last_used_gps_time = last_got_gps_time;
         }
 
-        if (last_used_gps_time_local.hours != -1 && last_used_gps_time_local.minutes != -1) {
+        if (last_used_gps_time_local.hours != 100 && last_used_gps_time_local.minutes != 100) {
             unsigned long elapsed_minutes = (millis() - gps_sync_millis) / 60000UL;
-            int base_total_minutes = last_used_gps_time_local.hours * 60 + last_used_gps_time_local.minutes;
-            int current_total_minutes = (base_total_minutes + (int)elapsed_minutes) % (24 * 60);
+            uint8_t base_total_minutes = last_used_gps_time_local.hours * 60 + last_used_gps_time_local.minutes;
+            uint8_t current_total_minutes = (base_total_minutes + (uint8_t)elapsed_minutes) % (24 * 60);
 
             current_time.hours = current_total_minutes / 60;
             current_time.minutes = current_total_minutes % 60;
@@ -45,8 +45,8 @@ void update_time() {
 
 
     // unsigned long total_minutes = millis() / 60000;
-    // int current_hours = (total_minutes / 60) % 24;
-    // int current_minutes = total_minutes % 60;
+    // uint8_t current_hours = (total_minutes / 60) % 24;
+    // uint8_t current_minutes = total_minutes % 60;
     // lcd_respring_time(current_hours, current_minutes);
 }
 
@@ -54,26 +54,26 @@ void update_time() {
 
 
 // Check if a year is a leap year
-int is_leap_year(int year) {
+uint8_t is_leap_year(uint16_t year) {
     return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
 }
 
 // Day of week (0 = Sunday, ..., 6 = Saturday)
 // Zeller's congruence (simplified)
-int day_of_week(int d, int m, int y) {
+uint8_t day_of_week(uint8_t d, uint8_t m, uint16_t y) {
     if (m < 3) {
         m += 12;
         y -= 1;
     }
-    int K = y % 100;
-    int J = y / 100;
-    int h = (d + (13 * (m + 1)) / 5 + K + K/4 + J/4 + 5*J) % 7;
+    uint8_t K = y % 100;
+    uint8_t J = y / 100;
+    uint8_t h = (d + (13 * (m + 1)) / 5 + K + K/4 + J/4 + 5*J) % 7;
     return (h + 6) % 7; // convert to 0 = Sunday
 }
 
 // Get the date (day) of the last Sunday of a given month
-int last_sunday(int month, int year) {
-    int days_in_month;
+uint8_t last_sunday(uint8_t month, uint16_t year) {
+    uint8_t days_in_month;
 
     switch (month) {
         case 1: case 3: case 5: case 7: case 8: case 10: case 12:
@@ -85,7 +85,7 @@ int last_sunday(int month, int year) {
             break;
     }
 
-    int d = days_in_month;
+    uint8_t d = days_in_month;
     while (day_of_week(d, month, year) != 0) {
         d--;
     }
@@ -93,9 +93,9 @@ int last_sunday(int month, int year) {
 }
 
 // Determine if daylight saving time (DST) is active in France/Europe
-int is_dst(int day, int month, int year, int hour_utc) {
-    int march = last_sunday(3, year);
-    int october = last_sunday(10, year);
+uint8_t is_dst(uint8_t day, uint8_t month, uint16_t year, uint8_t hour_utc) {
+    uint8_t march = last_sunday(3, year);
+    uint8_t october = last_sunday(10, year);
 
     if (month < 3 || month > 10) return 0;
     if (month > 3 && month < 10) return 1;
@@ -116,8 +116,8 @@ int is_dst(int day, int month, int year, int hour_utc) {
 }
 
 // Convert UTC to local time (France)
-struct time_base utc_to_local(int day, int month, int year, struct time_base time_utc) {
-    int offset = is_dst(day, month, year, time_utc.hours) ? 2 : 1;
+struct time_base utc_to_local(uint8_t day, uint8_t month, uint16_t year, struct time_base time_utc){
+    uint8_t offset = is_dst(day, month, year, time_utc.hours) ? 2 : 1;
     struct time_base time_local;
     time_local.hours = time_utc.hours + offset;
     time_local.minutes = time_utc.minutes;

@@ -14,4 +14,9 @@ extern double last_bearing_to_display;
 extern  TinyGPSPlus gps;
 extern HardwareSerial gpsSerial;
 
+struct position {
+    double lat;
+    double lng;
+};
+
 #endif // GPS_CORE_H
