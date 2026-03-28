@@ -91,7 +91,7 @@ void loop() {
         last_got_gps_time.minutes = gps.time.minute();
     }
 
-    if(utc_day == 0 && gps.date.isValid()) {
+    if(gps.date.isValid()) {
         utc_day = gps.date.day();
         utc_month = gps.date.month();
         utc_year = gps.date.year();

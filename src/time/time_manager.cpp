@@ -35,8 +35,8 @@ void update_time() {
 
         if (last_used_gps_time_local.hours != 100 && last_used_gps_time_local.minutes != 100) {
             unsigned long elapsed_minutes = (millis() - gps_sync_millis) / 60000UL;
-            uint8_t base_total_minutes = last_used_gps_time_local.hours * 60 + last_used_gps_time_local.minutes;
-            uint8_t current_total_minutes = (base_total_minutes + (uint8_t)elapsed_minutes) % (24 * 60);
+            uint16_t base_total_minutes = (uint16_t)last_used_gps_time_local.hours * 60 + last_used_gps_time_local.minutes;
+            uint16_t current_total_minutes = (base_total_minutes + (uint16_t)elapsed_minutes) % (24 * 60);
 
             current_time.hours = current_total_minutes / 60;
             current_time.minutes = current_total_minutes % 60;
@@ -103,13 +103,13 @@ uint8_t is_dst(uint8_t day, uint8_t month, uint16_t year, uint8_t hour_utc) {
     if (month == 3) {
         if (day > march) return 1;
         if (day < march) return 0;
-        return (hour_utc >= 2); // switch at 2:00 UTC
+        return (hour_utc >= 1); // switch at 1:00 UTC
     }
 
     if (month == 10) {
         if (day < october) return 1;
         if (day > october) return 0;
-        return (hour_utc < 3); // switch at 3:00 UTC
+        return (hour_utc < 1); // switch at 1:00 UTC
     }
 
     return 0;

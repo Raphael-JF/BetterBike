@@ -15,7 +15,7 @@ void update_current_position() {
     if (gps.location.isValid()) {
         current_position.lat = gps.location.lat();
         current_position.lng = gps.location.lng();
-        lcd_res
+        
     }
 }
 
