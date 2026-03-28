@@ -7,7 +7,7 @@
 #define H_gps 16 // 
 
 extern rgb_lcd lcd;
-extern uint8_t compass_grid[H_gps][W_gps];
+extern struct bin_matrix* compass_grid;
 extern double bearing_to_display;
 
 void lcd_respring_gps_status();

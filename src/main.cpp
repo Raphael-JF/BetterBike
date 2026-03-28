@@ -5,14 +5,9 @@
 #include "Arduino.h"
 
 
-#include "main.h"
 #include "gps/gps_core.h"
 #include "time/time_manager.h"
 #include "lcd/lcd_core.h"
-
-
-
-#define ARDUINO_ARCH_ESP32
 
 
 
@@ -23,12 +18,8 @@
 void setup() {
     Serial.begin(115200);
 
-#if defined(ARDUINO_ARCH_ESP32)
     Wire.begin(21, 22); // SDA, SCL
     gpsSerial.begin(9600, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN); // UART1
-#else
-    gpsSerial.begin(9600); // GPS
-#endif
 
     // set up the lcd's number of columns and rows:
     lcd.begin(16, 2);
@@ -119,7 +110,7 @@ void loop() {
     }
      
 
-    delay(50);
+    delay(250);
     is_gps_active = 1;
     // last_got_gps_time = {12, 34};
 }

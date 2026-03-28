@@ -4,11 +4,12 @@
 
 
 #include "lcd/lcd_core.h"
+#include "lcd/binary_matrix.h"
 #include "gps/gps_core.h"
 #include "time/time_manager.h"
 
 rgb_lcd lcd;
-uint8_t compass_grid[H_gps][W_gps];
+struct bin_matrix* compass_grid = create_bin_matrix(W_gps, H_gps);
 
 /*
     Extrait une "char" de 5x8 pixels depuis la grille du compas, à la position donnée par x et y (en nombre de caractères, pas de pixels), et la stocke dans out (format attendu par lcd.createChar).
@@ -17,7 +18,7 @@ void extract_char(int x, int y, uint8_t out[8]) {
     for (int i = 0; i < 8; i++) {
         out[i] = 0;
         for (int j = 0; j < 5; j++) {
-            if (compass_grid[y*8 + i][x*5 + j]) {
+            if (get_pixel(compass_grid, x*5 + j, y*8 + i)) {
                 out[i] |= (1 << (4 - j));
             }
         }
@@ -90,27 +91,27 @@ void clear_compass_for_magnetometer() {
     const int cy = H_gps / 2;
     
     // N (top)
-    compass_grid[2][cx] = 1;
-    compass_grid[3][cx] = 1;
+    set_pixel(compass_grid, cx, 2, true);
+    set_pixel(compass_grid, cx, 3, true);
     
     // S (bottom)
-    compass_grid[H_gps - 4][cx] = 1;
-    compass_grid[H_gps - 3][cx] = 1;
+    set_pixel(compass_grid, cx, H_gps - 4, true);
+    set_pixel(compass_grid, cx, H_gps - 3, true);
     
     // E (right)
-    compass_grid[cy][W_gps - 3] = 1;
-    compass_grid[cy][W_gps - 2] = 1;
+    set_pixel(compass_grid, W_gps - 3, cy, true);
+    set_pixel(compass_grid, W_gps - 2, cy, true);
     
     // W (left)
-    compass_grid[cy][2] = 1;
-    compass_grid[cy][3] = 1;
+    set_pixel(compass_grid, 2, cy, true);
+    set_pixel(compass_grid, 3, cy, true);
 
 }
 
 void clear_compass_for_gps() {
     for (int y = 0; y < H_gps; y++) {
         for (int x = 0; x < W_gps; x++) {
-            compass_grid[y][x] = 0;
+            set_pixel(compass_grid, x, y, false);
         }
     }
 }   
@@ -127,7 +128,7 @@ void draw_line(int x0, int y0, int x1, int y1) {
     while (1) {
         // allume pixel
         if (x0 >= 0 && x0 < W_gps && y0 >= 0 && y0 < H_gps)
-            compass_grid[y0][x0] = 1;
+            set_pixel(compass_grid, x0, y0, true);
 
         if (x0 == x1 && y0 == y1)
             break;
@@ -145,4 +146,3 @@ void draw_line(int x0, int y0, int x1, int y1) {
         }
     }
 }
-
