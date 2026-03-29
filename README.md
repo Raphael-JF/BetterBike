@@ -38,7 +38,11 @@ Le projet est maintenant compatible ESP32 (env `esp32dev`) avec:
 - Si la position GPS est encore valide, actualiser l'aiguille comme il se doit. Afficher alors la vitesse
 - Si la position GPS devient vieille (> 5 secondes), commencer à faire clignoter le cadran pour indiquer que les données ne sont plus fraîches.
 - Si la position GPS devient invalide (> 10 secondes), laisser le cadran allumé avec l'aiguille toujours actualisée, mais ne plus faire clignoter (indication que les données sont vieilles).
-
+- Il est possible de réduire la fréquence de l'advertising bluetooth, mais cela n'est pas une priorité pour le moment: 
+    ```c
+    pAdvertising->setMinInterval(160); // ~100 ms
+    pAdvertising->setMaxInterval(800); // ~500 ms
+    ```
 
 
 ### Lien utile

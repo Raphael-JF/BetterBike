@@ -18,7 +18,7 @@ extern struct time_base last_used_gps_time;
 
 
 // Valeur de millis() au moment où gps_base_hour et gps_base_minutes ont été synchronisées
-extern unsigned long gps_sync_millis;
+extern unsigned long last_time_sync_millis;
 
 
 extern uint16_t utc_year;
@@ -27,14 +27,11 @@ extern uint8_t utc_day;
 
 
 /*
-    Actualise en coulisse l'heure à afficher, en fuseau local Français. Ne gère pas l'affichage
+    Actualise en coulisse l'heure à afficher, en fuseau local Français. Ne gère pas l'affichage.
+    Renvoie 1 si l'heure a été mise à jour, 0 sinon (utile pour savoir s'il faut rafraîchir l'affichage).
 */
-void update_time(void);
+int update_time(void);
 struct time_base utc_to_local(uint8_t day, uint8_t month, uint16_t year, struct time_base time_utc);
 
-/* 
-    Met à jour les états de tous les clignotements. À appeler dans la loop() principale.
-*/
-void update_blinkings(void);
 
 #endif // TIME_MANAGER__H

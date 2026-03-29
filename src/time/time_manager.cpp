@@ -16,24 +16,18 @@ struct time_base last_used_gps_time = {100, 100};
 struct time_base last_used_gps_time_local = {100, 100};
 
 // Valeur de millis() au moment où gps_base_hour et gps_base_minutes ont été synchronisées
-unsigned long gps_sync_millis = 0;
+unsigned long last_time_sync_millis = 0;
 
 uint16_t utc_year = 2026;
 uint8_t utc_month = 4;
 uint8_t utc_day = 0;
 
-blinking compass_frame_blinking = blinking_create(1000, 0); // 1000 ms period, initial state off
 
-
-blinking* blinkings_to_update[] = {NULL};
-#define NB_BLINKINGS_TO_UPDATE 1
-#define IDX_COMPASS_FRAME_BLINKING 0
-
-
-void update_time() {
+int update_time() {
     if (last_got_gps_time.hours != 100 && last_got_gps_time.minutes != 100) {
         if (last_got_gps_time.minutes != last_used_gps_time.minutes || last_got_gps_time.hours != last_used_gps_time.hours) {
-            gps_sync_millis = millis();
+            // Nouvelle base temporelle GPS reçue, on la prend en compte pour faire avancer l'heure avec millis()
+            last_time_sync_millis = millis();
 
             last_used_gps_time_local = utc_to_local(utc_day, utc_month, utc_year, last_got_gps_time);
 
@@ -41,38 +35,22 @@ void update_time() {
         }
 
         if (last_used_gps_time_local.hours != 100 && last_used_gps_time_local.minutes != 100) {
-            unsigned long elapsed_minutes = (millis() - gps_sync_millis) / 60000UL;
+            // Faire avancer l'heure en fonction du temps écoulé depuis la dernière synchronisation avec une base temporelle GPS
+            unsigned long elapsed_minutes = (millis() - last_time_sync_millis) / 60000UL;
             uint16_t base_total_minutes = (uint16_t)last_used_gps_time_local.hours * 60 + last_used_gps_time_local.minutes;
             uint16_t current_total_minutes = (base_total_minutes + (uint16_t)elapsed_minutes) % (24 * 60);
 
-            current_time.hours = current_total_minutes / 60;
-            current_time.minutes = current_total_minutes % 60;
+            struct time_base calculated = {(uint8_t)(current_total_minutes / 60), (uint8_t)(current_total_minutes % 60)};
+            if (calculated.hours != current_time.hours || calculated.minutes != current_time.minutes) {
+                current_time.hours = calculated.hours;
+                current_time.minutes = calculated.minutes;
+                return 1;
+            }
         }
     }
-
-
-    // unsigned long total_minutes = millis() / 60000;
-    // uint8_t current_hours = (total_minutes / 60) % 24;
-    // uint8_t current_minutes = total_minutes % 60;
-    // lcd_respring_time(current_hours, current_minutes);
+    return 0;
 }
 
-
-void update_blinkings() {
-    blinking *_compass_blinking = blinkings_to_update[IDX_COMPASS_FRAME_BLINKING];
-
-    // Clignotement du cadre de la boussole si pas de fix GPS
-    if(_compass_blinking != NULL && blinking_update(_compass_blinking)) {
-        if (_compass_blinking->state) {
-            highlight_compass_frame();
-        }
-        else{
-            clear_compass_frame();
-            calculate_gps_grid();
-        }
-        lcd_respring_compass();
-    }
-}
 
 // Check if a year is a leap year
 uint8_t is_leap_year(uint16_t year) {

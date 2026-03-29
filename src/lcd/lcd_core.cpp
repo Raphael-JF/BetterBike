@@ -10,6 +10,8 @@
 
 rgb_lcd lcd;
 struct bin_matrix* compass_grid = create_bin_matrix(W_gps, H_gps);
+double bearing_to_display=0.0;
+
 
 /*
     Extrait une "char" de 5x8 pixels depuis la grille du compas, à la position donnée par x et y (en nombre de caractères, pas de pixels), et la stocke dans out (format attendu par lcd.createChar).
@@ -26,8 +28,8 @@ void extract_char(int x, int y, uint8_t out[8]) {
 }
 
 void lcd_respring_gps_status() {
-    lcd.setCursor(11, 0);
-    lcd.write(byte(is_gps_active ? 6 : 7));
+    lcd.setCursor(6, 0);
+    lcd.write("Compass");
 }
 
 
@@ -70,14 +72,14 @@ void lcd_respring_compass() {
     const double x = cx + tail_length*dx;
     const double y = cy + tail_length*dy;
     if(bearing_to_display < M_PI / 2) {
-        draw_line(cx, cy - 1, x, y);
+        draw_line(cx, cy - 1, x, y-1);
     }
     else if(bearing_to_display < M_PI) {
-        draw_line(cx - 1, cy - 1, x, y);
+        draw_line(cx - 1, cy - 1, x-1, y-1);
 
     }
     else if(bearing_to_display < 3*M_PI/2) {
-        draw_line(cx - 1, cy, x, y);
+        draw_line(cx - 1, cy, x-1, y);
     }
     else{
         draw_line(cx, cy, x, y);
