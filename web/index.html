@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Waypoint BLE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    #map { height: 80vh; }
+    #panel {
+      padding: 10px;
+      background: #eee;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="panel">
+  <div>Lat: <span id="lat">-</span></div>
+  <div>Lon: <span id="lon">-</span></div>
+  <button onclick="connectBLE()">Connect BLE</button>
+  <button onclick="sendWaypoint()">Send waypoint</button>
+</div>
+
+<script>
+let map = L.map('map').setView([44.84, -0.58], 13); // Bordeaux par défaut
+let marker = null;
+let lat = null;
+let lon = null;
+
+// carte OpenStreetMap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+// clic sur la carte
+map.on('click', function(e) {
+  lat = e.latlng.lat;
+  lon = e.latlng.lng;
+
+  document.getElementById("lat").innerText = lat.toFixed(6);
+  document.getElementById("lon").innerText = lon.toFixed(6);
+
+  if (marker) {
+    marker.setLatLng(e.latlng);
+  } else {
+    marker = L.marker(e.latlng).addTo(map);
+  }
+});
+
+// BLE
+let device, characteristic;
+
+async function connectBLE() {
+  try {
+    device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: ['ffe0'] // adapte si besoin
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService('ffe0');
+    characteristic = await service.getCharacteristic('ffe1');
+
+    alert("Connected !");
+  } catch (e) {
+    console.error(e);
+    alert("Erreur BLE");
+  }
+}
+
+async function sendWaypoint() {
+  if (!characteristic || lat === null) {
+    alert("Pas connecté ou pas de point");
+    return;
+  }
+
+  const msg = `${lat};${lon}\n`;
+  const encoder = new TextEncoder();
+  await characteristic.writeValue(encoder.encode(msg));
+
+  alert("Envoyé : " + msg);
+}
+</script>
+
+</body>
+</html>
