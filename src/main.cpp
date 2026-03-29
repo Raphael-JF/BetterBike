@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <Wire.h>
 #include "Arduino.h"
