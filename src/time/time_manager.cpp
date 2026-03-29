@@ -1,5 +1,7 @@
 #include "Arduino.h"
 #include "time/time_manager.h"
+#include "blinking.h"
+#include "lcd/lcd_core.h"
 
 // Base temporelle actuellement affichée à l'écran (en UTC)
 struct time_base current_time = {100, 100};
@@ -20,11 +22,20 @@ uint16_t utc_year = 2026;
 uint8_t utc_month = 4;
 uint8_t utc_day = 0;
 
+blinking compass_frame_blinking = blinking_create(1000, 0); // 1000 ms period, initial state off
+
+
+blinking* blinkings_to_update[] = {NULL};
+#define NB_BLINKINGS_TO_UPDATE 1
+#define IDX_COMPASS_FRAME_BLINKING 0
 
 
 void update_time() {
     if (last_got_gps_time.hours != 100 && last_got_gps_time.minutes != 100) {
-
+        Serial.print("Last GPS time: ");
+        Serial.print(last_got_gps_time.hours);
+        Serial.print(":");
+        Serial.println(last_got_gps_time.minutes);
         if (last_got_gps_time.minutes != last_used_gps_time.minutes || last_got_gps_time.hours != last_used_gps_time.hours) {
             gps_sync_millis = millis();
 
@@ -51,7 +62,21 @@ void update_time() {
 }
 
 
+void update_blinkings() {
+    blinking *_compass_blinking = blinkings_to_update[IDX_COMPASS_FRAME_BLINKING];
 
+    // Clignotement du cadre de la boussole si pas de fix GPS
+    if(_compass_blinking != NULL && blinking_update(_compass_blinking)) {
+        if (_compass_blinking->state) {
+            highlight_compass_frame();
+        }
+        else{
+            clear_compass_frame();
+            calculate_gps_grid();
+        }
+        lcd_respring_compass();
+    }
+}
 
 // Check if a year is a leap year
 uint8_t is_leap_year(uint16_t year) {

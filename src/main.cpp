@@ -29,30 +29,41 @@ void setup() {
     lcd.setCursor(0, 0);
     lcd.print("--:--  GPS");
 
-    uint8_t gps_valid_char[8] = {
-        0b00000,
-        0b00001,
-        0b00010,
-        0b10100,
-        0b01000,
-        0b00000,
-        0b00000,
+    // uint8_t gps_valid_char[8] = {
+    //     0b00000,
+    //     0b00001,
+    //     0b00010,
+    //     0b10100,
+    //     0b01000,
+    //     0b00000,
+    //     0b00000,
+    //     0b00000
+    // };
+
+    // uint8_t gps_invalid_char[8] = {
+    //     0b00000,
+    //     0b10001,
+    //     0b01010,
+    //     0b00100,
+    //     0b01010,
+    //     0b10001,
+    //     0b00000,
+    //     0b00000
+    // };
+
+    // logo bluetooth :
+    uint8_t bluetooth_car[8] = {
+        0b00110,
+        0b10101,
+        0b01101,
+        0b00110,
+        0b01101,
+        0b10101,
+        0b00110,
         0b00000
     };
 
-    uint8_t gps_invalid_char[8] = {
-        0b00000,
-        0b10001,
-        0b01010,
-        0b00100,
-        0b01010,
-        0b10001,
-        0b00000,
-        0b00000
-    };
-
-    lcd.createChar(6, gps_valid_char);
-    lcd.createChar(7, gps_invalid_char);
+    lcd.createChar(6, bluetooth_car);
     lcd_respring_gps_status();
 
     lcd.setCursor(13, 0);
@@ -72,13 +83,19 @@ void setup() {
 
 
 void loop() {
-
+    update_blinkings();
     // 1. Toujours lire le GPS
     while (gpsSerial.available()) {
-        Serial.println("Tic");
+        // Serial.println("Tic");
         gps.encode(gpsSerial.read());
     }
-    Serial.println("Tac");
+    // Serial.println("Tac");
+
+    const bool gps_time_fresh = gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000;
+    const bool gps_date_fresh = gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000;
+    const bool gps_fix_active = gps.location.isValid() && gps.location.age() < 2000;
+
+    is_gps_active = gps_time_fresh && gps_date_fresh && gps_fix_active;
 
     // 2. Utiliser les données seulement si dispo
     if (gps.location.isValid()) {
@@ -86,12 +103,12 @@ void loop() {
         Serial.println(gps.location.lng(), 6);
     }
 
-    if (gps.time.isValid()) {
+    if (gps_time_fresh) {
         last_got_gps_time.hours = gps.time.hour();
         last_got_gps_time.minutes = gps.time.minute();
+        
     }
-
-    if(gps.date.isValid()) {
+    if (gps_date_fresh) {
         utc_day = gps.date.day();
         utc_month = gps.date.month();
         utc_year = gps.date.year();
@@ -107,10 +124,10 @@ void loop() {
 
     if (fabs(bearing_to_display - last_bearing_to_display) > 0.05) {
         if (is_gps_active) {
-            clear_compass_for_gps();
+            clear_compass_frame();
         }
         else{
-            clear_compass_for_magnetometer();
+            highlight_compass_frame();
         }
         lcd_respring_compass();
         last_bearing_to_display = bearing_to_display;
@@ -125,6 +142,5 @@ void loop() {
      
 
     delay(250);
-    is_gps_active = 1;
     // last_got_gps_time = {12, 34};
 }

@@ -31,6 +31,32 @@ void lcd_respring_gps_status() {
 }
 
 
+void calculate_gps_grid(){
+    const double cx = W_gps / 2.0;
+    const double cy = H_gps / 2.0;
+
+    
+    double dx = cos(bearing_to_display);
+    double dy = -sin(bearing_to_display);
+
+    const uint8_t tail_length = W_gps < H_gps ? W_gps/2 : H_gps/2;
+    const double x = cx + tail_length*dx;
+    const double y = cy + tail_length*dy;
+    if(bearing_to_display < M_PI / 2) {
+        draw_line(cx, cy - 1, x, y);
+    }
+    else if(bearing_to_display < M_PI) {
+        draw_line(cx - 1, cy - 1, x, y);
+
+    }
+    else if(bearing_to_display < 3*M_PI/2) {
+        draw_line(cx - 1, cy, x, y);
+    }
+    else{
+        draw_line(cx, cy, x, y);
+    }
+}
+
 void lcd_respring_compass() {
 
     const double cx = W_gps / 2.0;
@@ -84,31 +110,33 @@ void lcd_respring_time() {
     lcd.print(time_str);
 }
 
-void clear_compass_for_magnetometer() {
-    clear_compass_for_gps();
+void highlight_compass_frame() {
 
     const int cx = W_gps / 2;
     const int cy = H_gps / 2;
     
-    // N (top)
-    set_pixel(compass_grid, cx, 2, true);
-    set_pixel(compass_grid, cx, 3, true);
+    set_pixel(compass_grid, 0, 0, true);
+    set_pixel(compass_grid, 1, 0, true);
+    set_pixel(compass_grid, 0, 1, true);
+
+
+    set_pixel(compass_grid, 0, H_gps - 1, true);
+    set_pixel(compass_grid, 0, H_gps - 2, true);
+    set_pixel(compass_grid, 1, H_gps - 1, true);
+
+    set_pixel(compass_grid, W_gps - 1, H_gps - 1, true);
+    set_pixel(compass_grid, W_gps - 1, H_gps - 2, true);
+    set_pixel(compass_grid, W_gps - 2, H_gps - 1, true);
+
+    set_pixel(compass_grid, W_gps - 1, 0, true);
+    set_pixel(compass_grid, W_gps - 1, 1, true);
+    set_pixel(compass_grid, W_gps - 2, 0, true);
     
-    // S (bottom)
-    set_pixel(compass_grid, cx, H_gps - 4, true);
-    set_pixel(compass_grid, cx, H_gps - 3, true);
-    
-    // E (right)
-    set_pixel(compass_grid, W_gps - 3, cy, true);
-    set_pixel(compass_grid, W_gps - 2, cy, true);
-    
-    // W (left)
-    set_pixel(compass_grid, 2, cy, true);
-    set_pixel(compass_grid, 3, cy, true);
+
 
 }
 
-void clear_compass_for_gps() {
+void clear_compass_frame() {
     for (int y = 0; y < H_gps; y++) {
         for (int x = 0; x < W_gps; x++) {
             set_pixel(compass_grid, x, y, false);

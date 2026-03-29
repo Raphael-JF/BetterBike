@@ -32,4 +32,9 @@ extern uint8_t utc_day;
 void update_time(void);
 struct time_base utc_to_local(uint8_t day, uint8_t month, uint16_t year, struct time_base time_utc);
 
+/* 
+    Met à jour les états de tous les clignotements. À appeler dans la loop() principale.
+*/
+void update_blinkings(void);
+
 #endif // TIME_MANAGER__H
