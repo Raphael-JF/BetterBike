@@ -65,18 +65,18 @@ let device, characteristic;
 async function connectBLE() {
   try {
     device = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: [] // adapte si besoin
+      acceptAllDevices: true
     });
 
     const server = await device.gatt.connect();
-    const service = await server.getPrimaryService('ffe0');
-    characteristic = await service.getCharacteristic('ffe1');
 
-    alert("Connected !");
+    const services = await server.getPrimaryServices();
+    console.log("Services:", services);
+
+    alert("Connected (check console)");
   } catch (e) {
     console.error(e);
-    alert("Erreur BLE");
+    alert(e);
   }
 }
 
