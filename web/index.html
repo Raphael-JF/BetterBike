@@ -70,16 +70,30 @@ async function connectBLE() {
 
     const server = await device.gatt.connect();
 
+    // 🔎 on récupère TOUS les services
     const services = await server.getPrimaryServices();
-    console.log("Services:", services);
 
-    alert("Connected (check console)");
+    for (const service of services) {
+      try {
+        const characteristics = await service.getCharacteristics();
+
+        for (const char of characteristics) {
+          // 👉 on prend la première writable
+          if (char.properties.write || char.properties.writeWithoutResponse) {
+            characteristic = char;
+            alert("Connected et caractéristique trouvée !");
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+
+    alert("Aucune caractéristique writable trouvée 😢");
+
   } catch (e) {
-    console.error(e);
-    alert(e);
+    alert("Erreur : " + e);
   }
 }
-
 async function sendWaypoint() {
   if (!characteristic || lat === null) {
     alert("Pas connecté ou pas de point");
