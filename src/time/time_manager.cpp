@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "time/time_manager.h"
-#include "blinking.h"
+#include "time/blinking.h"
 #include "lcd/lcd_core.h"
 
 // Base temporelle actuellement affichée à l'écran (en UTC)
@@ -32,10 +32,6 @@ blinking* blinkings_to_update[] = {NULL};
 
 void update_time() {
     if (last_got_gps_time.hours != 100 && last_got_gps_time.minutes != 100) {
-        Serial.print("Last GPS time: ");
-        Serial.print(last_got_gps_time.hours);
-        Serial.print(":");
-        Serial.println(last_got_gps_time.minutes);
         if (last_got_gps_time.minutes != last_used_gps_time.minutes || last_got_gps_time.hours != last_used_gps_time.hours) {
             gps_sync_millis = millis();
 

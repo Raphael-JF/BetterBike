@@ -8,6 +8,7 @@
 #include "gps/gps_core.h"
 #include "time/time_manager.h"
 #include "lcd/lcd_core.h"
+#include "bluetooth/bluetooth.h"
 
 
 
@@ -24,6 +25,8 @@ void setup() {
     // set up the lcd's number of columns and rows:
     lcd.begin(16, 2);
     lcd.setRGB(127, 127, 127);
+
+    ble.begin("VeloGPS");
 
 
     lcd.setCursor(0, 0);
@@ -99,8 +102,8 @@ void loop() {
 
     // 2. Utiliser les données seulement si dispo
     if (gps.location.isValid()) {
-        Serial.println(gps.location.lat(), 6);
-        Serial.println(gps.location.lng(), 6);
+        // Serial.println(gps.location.lat(), 6);
+        // Serial.println(gps.location.lng(), 6);
     }
 
     if (gps_time_fresh) {
@@ -140,6 +143,12 @@ void loop() {
         lcd_respring_time();
     }
      
+    while (ble.available()) {
+        char c = ble.read();
+        Serial.write(c); // debug brut
+    }
+        // ici tu parses lat/lon
+
 
     delay(250);
     // last_got_gps_time = {12, 34};
