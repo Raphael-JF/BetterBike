@@ -1,41 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>Waypoint BLE</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-  <style>
-    body { margin: 0; font-family: sans-serif; }
-    #map { height: 80vh; }
-    #panel {
-      padding: 10px;
-      background: #eee;
-    }
-    button {
-      padding: 10px;
-      font-size: 16px;
-    }
-  </style>
+    <meta charset="utf-8" />
+    <title>Waypoint BLE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
+    <style>
+        body { margin: 0; font-family: sans-serif; }
+        #map { height: 80vh; }
+        #panel {
+            padding: 10px;
+            background: #eee;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
-
-<div id="map"></div>
-
-<div id="panel">
-  <div>Lat: <span id="lat">-</span></div>
-  <div>Lon: <span id="lon">-</span></div>
-  <button onclick="connectBLE()">Connect BLE</button>
-  <button onclick="sendWaypoint()">Send waypoint</button>
-  <button onclick="saveWaypoint()">Save waypoint</button>
-  <button onclick="loadWaypoint()">Load waypoint</button>
-</div>
-
-<script>
+    
+    <div id="map"></div>
+    
+    <div id="panel">
+        <div>Lat: <span id="lat">-</span></div>
+        <div>Lon: <span id="lon">-</span></div>
+        <button onclick="connectBLE()">Connect BLE</button>
+        <button onclick="sendWaypoint()">Send waypoint</button>
+        <button onclick="saveWaypoint()">Save waypoint</button>
+        <button onclick="loadWaypoint()">Load waypoint</button>
+        <button onclick="renameWaypoint()">Rename waypoint</button>
+        <button onclick="deleteWaypoint()">Delete waypoint</button>
+    </div>
+    
+    <script>
 let map = L.map('map').setView([44.84, -0.58], 13); // Bordeaux par défaut
 let marker = null;
 let lat = null;
@@ -44,164 +46,241 @@ const WAYPOINTS_STORAGE_KEY = "betterbike_waypoints_v1";
 
 // carte OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19
+    maxZoom: 19
 }).addTo(map);
 
 // clic sur la carte
 map.on('click', function(e) {
-  lat = e.latlng.lat;
-  lon = e.latlng.lng;
-
-  document.getElementById("lat").innerText = lat.toFixed(6);
-  document.getElementById("lon").innerText = lon.toFixed(6);
-
-  if (marker) {
-    marker.setLatLng(e.latlng);
-  } else {
-    marker = L.marker(e.latlng).addTo(map);
-  }
+    lat = e.latlng.lat;
+    lon = e.latlng.lng;
+    
+    document.getElementById("lat").innerText = lat.toFixed(6);
+    document.getElementById("lon").innerText = lon.toFixed(6);
+    
+    if (marker) {
+        marker.setLatLng(e.latlng);
+    } else {
+        marker = L.marker(e.latlng).addTo(map);
+    }
 });
 
 // BLE
 let device, characteristic;
 
 async function connectBLE() {
-  try {
-    device = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true
-    });
-
-    const server = await device.gatt.connect();
-
-    // 🔎 on récupère TOUS les services
-    const services = await server.getPrimaryServices();
-
-    for (const service of services) {
-      try {
-        const characteristics = await service.getCharacteristics();
-
-        for (const char of characteristics) {
-          // 👉 on prend la première writable
-          if (char.properties.write || char.properties.writeWithoutResponse) {
-            characteristic = char;
-            alert("Connected et caractéristique trouvée !");
-            return;
-          }
+    try {
+        device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true
+        });
+        
+        const server = await device.gatt.connect();
+        
+        // 🔎 on récupère TOUS les services
+        const services = await server.getPrimaryServices();
+        
+        for (const service of services) {
+            try {
+                const characteristics = await service.getCharacteristics();
+                
+                for (const char of characteristics) {
+                    // 👉 on prend la première writable
+                    if (char.properties.write || char.properties.writeWithoutResponse) {
+                        characteristic = char;
+                        alert("Connected et caractéristique trouvée !");
+                        return;
+                    }
+                }
+            } catch (e) {}
         }
-      } catch (e) {}
+        
+        alert("Aucune caractéristique writable trouvée 😢");
+        
+    } catch (e) {
+        alert("Erreur : " + e);
     }
-
-    alert("Aucune caractéristique writable trouvée 😢");
-
-  } catch (e) {
-    alert("Erreur : " + e);
-  }
 }
 async function sendWaypoint() {
-  if (!characteristic || lat === null) {
-    alert("Pas connecté ou pas de point");
-    return;
-  }
-
-  const msg = `${lat};${lon}\n`;
-  const encoder = new TextEncoder();
-  await characteristic.writeValue(encoder.encode(msg));
-
-  alert("Envoyé : " + msg);
+    if (!characteristic || lat === null) {
+        alert("Pas connecté ou pas de point");
+        return;
+    }
+    
+    const msg = `${lat};${lon}\n`;
+    const encoder = new TextEncoder();
+    await characteristic.writeValue(encoder.encode(msg));
+    
+    alert("Envoyé : " + msg);
 }
 
 function getStoredWaypoints() {
-  try {
-    const raw = localStorage.getItem(WAYPOINTS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return [];
-  }
+    try {
+        const raw = localStorage.getItem(WAYPOINTS_STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        return [];
+    }
 }
 
 function setStoredWaypoints(waypoints) {
-  localStorage.setItem(WAYPOINTS_STORAGE_KEY, JSON.stringify(waypoints));
+    localStorage.setItem(WAYPOINTS_STORAGE_KEY, JSON.stringify(waypoints));
+}
+
+function formatWaypointList(waypoints) {
+    return waypoints
+    .map((wp, index) => `${index + 1}. ${wp.name} (${wp.lat.toFixed(6)}, ${wp.lon.toFixed(6)})`)
+    .join("\n");
+}
+
+function promptWaypointIndex(waypoints, actionLabel) {
+    const list = formatWaypointList(waypoints);
+    const choice = prompt(`${actionLabel} (numéro) :\n${list}`);
+
+    if (choice === null) {
+        return null;
+    }
+
+    const selectedIndex = Number.parseInt(choice, 10) - 1;
+    if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= waypoints.length) {
+        alert("Choix invalide");
+        return null;
+    }
+
+    return selectedIndex;
 }
 
 function saveWaypoint() {
-  if (lat === null || lon === null) {
-    alert("Choisis un point sur la carte avant de sauvegarder");
-    return;
-  }
-
-  const defaultName = `wp_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}`;
-  const inputName = prompt("Nom du waypoint ?", defaultName);
-
-  if (inputName === null) {
-    return;
-  }
-
-  const name = inputName.trim();
-  if (!name) {
-    alert("Nom invalide");
-    return;
-  }
-
-  const waypoints = getStoredWaypoints();
-  const existingIndex = waypoints.findIndex(wp => wp.name === name);
-  const data = { name, lat, lon, updatedAt: Date.now() };
-
-  if (existingIndex >= 0) {
-    waypoints[existingIndex] = data;
-  } else {
-    waypoints.push(data);
-  }
-
-  setStoredWaypoints(waypoints);
-  alert(`Waypoint \"${name}\" sauvegardé`);
+    if (lat === null || lon === null) {
+        alert("Choisis un point sur la carte avant de sauvegarder");
+        return;
+    }
+    
+    const defaultName = `wp_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}`;
+    const inputName = prompt("Nom du waypoint ?", defaultName);
+    
+    if (inputName === null) {
+        return;
+    }
+    
+    const name = inputName.trim();
+    if (!name) {
+        alert("Nom invalide");
+        return;
+    }
+    
+    const waypoints = getStoredWaypoints();
+    const existingIndex = waypoints.findIndex(wp => wp.name === name);
+    const data = { name, lat, lon, updatedAt: Date.now() };
+    
+    if (existingIndex >= 0) {
+        waypoints[existingIndex] = data;
+    } else {
+        waypoints.push(data);
+    }
+    
+    setStoredWaypoints(waypoints);
+    alert(`Waypoint \"${name}\" sauvegardé`);
 }
 
 function loadWaypoint() {
-  const waypoints = getStoredWaypoints();
-
-  if (waypoints.length === 0) {
-    alert("Aucun waypoint sauvegardé");
-    return;
-  }
-
-  const list = waypoints
-    .map((wp, index) => `${index + 1}. ${wp.name} (${wp.lat.toFixed(6)}, ${wp.lon.toFixed(6)})`)
-    .join("\n");
-
-  const choice = prompt(`Choisis un waypoint (numéro) :\n${list}`);
-
-  if (choice === null) {
-    return;
-  }
-
-  const selectedIndex = Number.parseInt(choice, 10) - 1;
-
-  if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= waypoints.length) {
-    alert("Choix invalide");
-    return;
-  }
-
-  const selected = waypoints[selectedIndex];
-  lat = selected.lat;
-  lon = selected.lon;
-
-  document.getElementById("lat").innerText = lat.toFixed(6);
-  document.getElementById("lon").innerText = lon.toFixed(6);
-
-  const latlng = L.latLng(lat, lon);
-
-  if (marker) {
-    marker.setLatLng(latlng);
-  } else {
-    marker = L.marker(latlng).addTo(map);
-  }
-
-  map.setView(latlng, map.getZoom());
-  alert(`Waypoint \"${selected.name}\" chargé`);
+    const waypoints = getStoredWaypoints();
+    
+    if (waypoints.length === 0) {
+        alert("Aucun waypoint sauvegardé");
+        return;
+    }
+    
+    const selectedIndex = promptWaypointIndex(waypoints, "Choisis un waypoint");
+    if (selectedIndex === null) {
+        return;
+    }
+    
+    const selected = waypoints[selectedIndex];
+    lat = selected.lat;
+    lon = selected.lon;
+    
+    document.getElementById("lat").innerText = lat.toFixed(6);
+    document.getElementById("lon").innerText = lon.toFixed(6);
+    
+    const latlng = L.latLng(lat, lon);
+    
+    if (marker) {
+        marker.setLatLng(latlng);
+    } else {
+        marker = L.marker(latlng).addTo(map);
+    }
+    
+    map.setView(latlng, map.getZoom());
+    alert(`Waypoint \"${selected.name}\" chargé`);
 }
-</script>
 
+function renameWaypoint() {
+    const waypoints = getStoredWaypoints();
+
+    if (waypoints.length === 0) {
+        alert("Aucun waypoint sauvegardé");
+        return;
+    }
+
+    const selectedIndex = promptWaypointIndex(waypoints, "Waypoint à renommer");
+    if (selectedIndex === null) {
+        return;
+    }
+
+    const current = waypoints[selectedIndex];
+    const inputName = prompt("Nouveau nom ?", current.name);
+
+    if (inputName === null) {
+        return;
+    }
+
+    const newName = inputName.trim();
+    if (!newName) {
+        alert("Nom invalide");
+        return;
+    }
+
+    if (waypoints.some((wp, index) => index !== selectedIndex && wp.name === newName)) {
+        alert("Ce nom existe déjà");
+        return;
+    }
+
+    waypoints[selectedIndex] = {
+        ...current,
+        name: newName,
+        updatedAt: Date.now()
+    };
+
+    setStoredWaypoints(waypoints);
+    alert(`Waypoint \"${current.name}\" renommé en \"${newName}\"`);
+}
+
+function deleteWaypoint() {
+    const waypoints = getStoredWaypoints();
+
+    if (waypoints.length === 0) {
+        alert("Aucun waypoint sauvegardé");
+        return;
+    }
+
+    const selectedIndex = promptWaypointIndex(waypoints, "Waypoint à supprimer");
+    if (selectedIndex === null) {
+        return;
+    }
+
+    const selected = waypoints[selectedIndex];
+    const confirmed = confirm(`Supprimer \"${selected.name}\" ?`);
+
+    if (!confirmed) {
+        return;
+    }
+
+    waypoints.splice(selectedIndex, 1);
+    setStoredWaypoints(waypoints);
+    alert(`Waypoint \"${selected.name}\" supprimé`);
+}
+    </script>
+    
 </body>
 </html>
