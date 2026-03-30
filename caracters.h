@@ -20,6 +20,5 @@ extern uint8_t *digits_car[10];
 
 
 void draw_caracter(int x, int y, uint8_t char_data[8]);
-void extract_char(int x, int y, uint8_t out[8]);
 
 #endif // CARACTERS_H
