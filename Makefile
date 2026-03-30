@@ -1,4 +1,34 @@
-all: local
+# ===== CONFIG =====
+BOARD ?= esp32dev
+PORT ?= /dev/ttyUSB0
 
-local:
-	gcc -v -I~/Bureau/Code/I260319-122733-uno/src lcd_sim.h gps.h caracters.h  -lm -o truc && ./truc
+# ===== COMMANDES =====
+
+build:
+	pio run
+
+upload:
+	pio run -t upload --upload-port $(PORT)
+
+monitor:
+	pio device monitor --port $(PORT)
+
+# build + flash
+flash: upload
+
+# build + flash + monitor
+run:
+	pio run -t upload --upload-port $(PORT)
+	pio device monitor --port $(PORT)
+
+# clean
+clean:
+	pio run -t clean
+
+# reset projet (bourrin)
+purge:
+	rm -rf .pio .pioenvs .piolibdeps
+
+# liste ports
+ports:
+	pio device list
