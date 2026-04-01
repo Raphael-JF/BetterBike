@@ -1,14 +1,13 @@
 #include <stdint.h>
 #include "Arduino.h"
-#include "rgb_lcd.h"
-
+#include <LiquidCrystal_I2C.h>
 
 #include "lcd/lcd_core.h"
 #include "lcd/binary_matrix.h"
 #include "gps/gps_core.h"
 #include "time/time_manager.h"
 
-rgb_lcd lcd;
+LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 struct bin_matrix* compass_grid = create_bin_matrix(W_gps, H_gps);
 double bearing_to_display=0.0;
 
@@ -29,7 +28,7 @@ void extract_char(int x, int y, uint8_t out[8]) {
 
 void lcd_respring_gps_status() {
     lcd.setCursor(6, 0);
-    lcd.write("Compass");
+    lcd.print("Compass");
 }
 
 

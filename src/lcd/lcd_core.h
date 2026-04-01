@@ -1,12 +1,12 @@
 #ifndef LCD_CORE__H
 #define LCD_CORE__H
 
-#include "rgb_lcd.h"
+#include <LiquidCrystal_I2C.h>
 
 #define W_gps 15 // 
 #define H_gps 16 // 
 
-extern rgb_lcd lcd;
+extern LiquidCrystal_I2C lcd;
 extern struct bin_matrix* compass_grid;
 extern double bearing_to_display;
 

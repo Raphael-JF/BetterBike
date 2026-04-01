@@ -22,10 +22,11 @@ void setup() {
 
     Wire.begin(21, 22); // SDA, SCL
     gpsSerial.begin(9600, SERIAL_8N1, 16, 17); // UART1
-
-    // set up the lcd's number of columns and rows:
-    lcd.begin(16, 2);
-    lcd.setRGB(127, 127, 127);
+// set up the lcd's number of columns and rows:
+    while (lcd.begin(16, 2, LCD_5x8DOTS) != 1) {
+        Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong. Only pins numbers: 4,5,6,16,11,12,13,14 are legal."));
+        delay(5000);   
+    }
 
     ble.begin("VeloGPS");
     
@@ -63,6 +64,7 @@ void setup() {
 
 
 }
+
 
 
 void loop() {
