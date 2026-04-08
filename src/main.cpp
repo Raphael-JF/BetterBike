@@ -59,7 +59,7 @@ void setup() {
     lcd.write(byte(3));
     lcd.write(byte(4));
     lcd.write(byte(5));
-
+    clear_compass_frame();
     lcd_respring_compass();
 
 
@@ -77,7 +77,7 @@ void loop() {
     // }
     // clear_compass_frame();
     // lcd_respring_compass();
-    Serial.println(last_gps_sync_millis);
+    // Serial.println(last_gps_sync_millis);
     unsigned long current_millis = millis();
     switch (timeout_status) {
         case GPS_TIMEOUT_STATUS_OK:
@@ -132,19 +132,19 @@ void loop() {
 
 
     // 2. Utiliser les données seulement si elles sont valides et fraîches 
-    if (gps_time_fresh) {
-        last_got_gps_time.hours = gps.time.hour();
-        last_got_gps_time.minutes = gps.time.minute();
-        
-    }
+
     if (gps_date_fresh) {
         utc_day = gps.date.day();
         utc_month = gps.date.month();
         utc_year = gps.date.year();
     }
     if (gps_fix_active) {
-        Serial.print("act");
-        update_current_position();
+        update_current_position();    
+        if (gps_time_fresh) {
+        last_got_gps_time.hours = gps.time.hour();
+        last_got_gps_time.minutes = gps.time.minute();
+        
+    }
     }
 
 

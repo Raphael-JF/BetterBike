@@ -60,30 +60,6 @@ void calculate_gps_grid(){
 
 void lcd_respring_compass() {
 
-    const double cx = W_gps / 2.0;
-    const double cy = H_gps / 2.0;
-
-    
-    double dx = cos(bearing_to_display);
-    double dy = -sin(bearing_to_display);
-
-    const uint8_t tail_length = W_gps < H_gps ? W_gps/2 : H_gps/2;
-    const double x = cx + tail_length*dx;
-    const double y = cy + tail_length*dy;
-    if(bearing_to_display < M_PI / 2) {
-        draw_line(cx, cy - 1, x, y-1);
-    }
-    else if(bearing_to_display < M_PI) {
-        draw_line(cx - 1, cy - 1, x-1, y-1);
-
-    }
-    else if(bearing_to_display < 3*M_PI/2) {
-        draw_line(cx - 1, cy, x-1, y);
-    }
-    else{
-        draw_line(cx, cy, x, y);
-    }
-
     uint8_t c00[8], c10[8], c20[8];
     uint8_t c01[8], c11[8], c21[8];
     extract_char(0, 0, c00);

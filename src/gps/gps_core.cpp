@@ -14,7 +14,7 @@ struct position current_position = {0.0, 0.0};
 unsigned long last_gps_sync_millis = 0;
 
 
-enum gps_timeout_status timeout_status = GPS_TIMEOUT_STATUS_OK;
+enum gps_timeout_status timeout_status = GPS_TIMEOUT_STATUS_INVALID;
 
 
 
