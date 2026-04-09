@@ -68,26 +68,6 @@ void setup() {
 
 void loop() {
     bool compass_needs_respring = false;
-    const unsigned long now = millis();
-    static unsigned long last_compass_sim_update = 0;
-    const unsigned long compass_sim_period_ms = 100;
-
-    if (now - last_compass_sim_update >= compass_sim_period_ms) {
-        unsigned long elapsed = now - last_compass_sim_update;
-        if (last_compass_sim_update == 0) {
-            elapsed = compass_sim_period_ms;
-        }
-        last_compass_sim_update = now;
-
-        bearing_to_display += 1.0 * ((double)elapsed / 1000.0); // pour test d'affichage de la boussole, à remplacer par le calcul du bearing GPS réel
-        if (bearing_to_display >= 2 * M_PI) {
-            bearing_to_display = fmod(bearing_to_display, 2 * M_PI);
-        }
-
-        if (calculate_compass_grid()) {
-            compass_needs_respring = true;
-        }
-    }
     
 
     
@@ -98,7 +78,7 @@ void loop() {
 
     const bool gps_time_fresh = gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000;
     const bool gps_date_fresh = gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000;
-    const bool gps_fix_active = gps.location.isValid() && gps.location.age() < 2000;
+    const bool gps_fix_active = gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000;
 
 
     // 2. Utiliser les données seulement si elles sont valides et fraîches 
@@ -108,9 +88,14 @@ void loop() {
         utc_month = gps.date.month();
         utc_year = gps.date.year();
     }
+
+
+
     if (gps_fix_active) {
-        update_current_position();    
-        
+        update_current_position();
+        if (update_bearing_to_waypoint() && calculate_compass_grid()) {
+            compass_needs_respring = true;
+        }
         if (gps_time_fresh) {
             last_got_gps_time.hours = gps.time.hour();
             last_got_gps_time.minutes = gps.time.minute();
@@ -122,6 +107,12 @@ void loop() {
         lcd_respring_time();
     }
 
+    if (bluetooth_update_waypoint_from_stream()) {
+        if (gps_fix_active && update_bearing_to_waypoint() && calculate_compass_grid()) {
+            compass_needs_respring = true;
+        }
+    }
+
     // 3. Mettre à jour l'affichage de la boussole
     compass_needs_respring |= update_compass_frame_blinking();
     compass_needs_respring |= update_gps_timeout_status();
@@ -129,13 +120,7 @@ void loop() {
     if (compass_needs_respring) {
         lcd_respring_compass();
     }
-
-     
-    while (ble.available()) {
-        char c = ble.read();
-        Serial.write(c); // debug brut
-    }
-        // ici tu parses lat/lon
+    
 
     delay(5);
 }

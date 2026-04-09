@@ -29,7 +29,7 @@ void extract_char(int x, int y, uint8_t out[8]) {
 
 void lcd_respring_gps_status() {
     lcd.setCursor(6, 0);
-    lcd.print("Compass");
+    lcd.print("no gps");
 }
 
 

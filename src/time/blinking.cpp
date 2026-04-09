@@ -6,7 +6,7 @@
 blinking* active_blinkings[] = {
     NULL, // IDX_COMPASS_FRAME_BLINKING : clignotement du cadre de la boussole en cas de non-fix GPS
 };
-blinking compass_frame_blinking = blinking_create(500, 1) ;
+blinking compass_frame_blinking = blinking_create(500, 0) ;
 
 
 struct blinking blinking_create(uint16_t period, uint8_t initial_state) {

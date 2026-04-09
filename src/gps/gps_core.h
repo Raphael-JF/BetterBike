@@ -36,6 +36,13 @@ void update_current_position();
 
 
 /*
+    Met à jour bearing_to_display en radians pour pointer du current_position vers waypoint_position.
+    Renvoie 1 si la valeur du bearing a changé, 0 sinon.
+*/
+uint8_t update_bearing_to_waypoint();
+
+
+/*
     Met à jour le statut de timeout_status en fonction du temps écoulé depuis la dernière synchronisation avec les données GPS. Retourne 1 si l'affichage de la boussole doit être mis à jour, 0 sinon.
 */
 uint8_t update_gps_timeout_status();
