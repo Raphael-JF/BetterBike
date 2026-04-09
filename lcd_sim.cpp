@@ -14,20 +14,20 @@ void display_lcd() {
     printf("\033[H");
     printf("\n");
 
-    for (int cy = 0; cy < H/8; cy++) {      // lignes de caractères
+    for (int CY = 0; CY < H/8; CY++) {      // lignes de caractères
         // Ligne horizontale du haut
-        for (int cx = 0; cx < W/5; cx++) {
+        for (int CX = 0; CX < W/5; CX++) {
             printf("|-----");
             // printf("      ");
         }
         printf("|\n");
 
         for (int y = 0; y < 8; y++) {     // pixels par caractère
-            for (int cx = 0; cx < W/5; cx++) { // colonnes de caractères
+            for (int CX = 0; CX < W/5; CX++) { // colonnes de caractères
                 printf("|");              // bord gauche du caractère
                 for (int x = 0; x < 5; x++) {
-                    int px = cx * 5 + x;
-                    int py = cy * 8 + y;
+                    int px = CX * 5 + x;
+                    int py = CY * 8 + y;
                     printf(compass_grid[py][px] ? "*" : " ");
                 }
             }
@@ -36,7 +36,7 @@ void display_lcd() {
     }
 
     // Ligne horizontale finale
-    for (int cx = 0; cx < W/5; cx++) {
+    for (int CX = 0; CX < W/5; CX++) {
         printf("|-----");
     }
     printf("|\n");

@@ -8,8 +8,9 @@
 #include "time/time_manager.h"
 
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
+struct compass_pos compass_pos = {2*H_gps, 2*W_gps};
 struct bin_matrix* compass_grid = create_bin_matrix(W_gps, H_gps);
-double bearing_to_display=0.0;
+double bearing_to_display = 0.0;
 
 
 /*
@@ -32,34 +33,44 @@ void lcd_respring_gps_status() {
 }
 
 
-void calculate_gps_grid(){
-    const double cx = W_gps / 2.0;
-    const double cy = H_gps / 2.0;
+uint8_t calculate_compass_grid(){
 
     
     double dx = cos(bearing_to_display);
     double dy = -sin(bearing_to_display);
 
-    const uint8_t tail_length = W_gps < H_gps ? W_gps/2 : H_gps/2;
-    const double x = cx + tail_length*dx;
-    const double y = cy + tail_length*dy;
+    uint8_t x = CX + round((double)(ARROW_LENGTH)*dx);
+    uint8_t y = CY + round((double)(ARROW_LENGTH)*dy);
+
+    if(x == compass_pos.x && y == compass_pos.y) {
+        return 0; // Indique que l'aiguille n'a pas besoin d'être redessinée
+    }
+
+    clear_inner_compass();
+
+    compass_pos.x = x;
+    compass_pos.y = y;
+    uint8_t cx = (uint8_t)CX;
+    uint8_t cy = (uint8_t)CY;
+
+
     if(bearing_to_display < M_PI / 2) {
-        draw_line(cx, cy - 1, x, y);
+        draw_line(cx, cy - 1, x, y - 1);
     }
     else if(bearing_to_display < M_PI) {
-        draw_line(cx - 1, cy - 1, x, y);
+        draw_line(cx - 1, cy - 1, x - 1, y - 1);
 
     }
     else if(bearing_to_display < 3*M_PI/2) {
-        draw_line(cx - 1, cy, x, y);
+        draw_line(cx - 1, cy, x - 1, y);
     }
     else{
         draw_line(cx, cy, x, y);
     }
+    return 1;
 }
 
 void lcd_respring_compass() {
-
     uint8_t c00[8], c10[8], c20[8];
     uint8_t c01[8], c11[8], c21[8];
     extract_char(0, 0, c00);
@@ -88,9 +99,6 @@ void lcd_respring_time() {
 }
 
 void highlight_compass_frame() {
-
-    const int cx = W_gps / 2;
-    const int cy = H_gps / 2;
     
     set_pixel(compass_grid, 0, 0, true);
     set_pixel(compass_grid, 1, 0, true);
@@ -113,9 +121,38 @@ void highlight_compass_frame() {
 
 }
 
-void clear_compass_frame() {
+
+void unhighlight_compass_frame() {
+    set_pixel(compass_grid, 0, 0, false);
+    set_pixel(compass_grid, 1, 0, false);
+    set_pixel(compass_grid, 0, 1, false);
+
+
+    set_pixel(compass_grid, 0, H_gps - 1, false);
+    set_pixel(compass_grid, 0, H_gps - 2, false);
+    set_pixel(compass_grid, 1, H_gps - 1, false);
+
+    set_pixel(compass_grid, W_gps - 1, H_gps - 1, false);
+    set_pixel(compass_grid, W_gps - 1, H_gps - 2, false);
+    set_pixel(compass_grid, W_gps - 2, H_gps - 1, false);
+
+    set_pixel(compass_grid, W_gps - 1, 0, false);
+    set_pixel(compass_grid, W_gps - 1, 1, false);
+    set_pixel(compass_grid, W_gps - 2, 0, false);
+    
+
+
+}
+
+void clear_inner_compass() {
     for (int y = 0; y < H_gps; y++) {
         for (int x = 0; x < W_gps; x++) {
+            if ((x == 0 && (y == 0 || y == 1 || y == H_gps - 1 || y == H_gps - 2)) ||
+                (x == 1 && (y == 0 || y == H_gps - 1)) ||
+                (x == W_gps - 1 && (y == 0 || y == 1 || y == H_gps - 1 || y == H_gps - 2)) ||
+                (x == W_gps - 2 && (y == 0 || y == H_gps - 1))) {
+                continue; // ne pas effacer les pixels du cadre
+            }
             set_pixel(compass_grid, x, y, false);
         }
     }

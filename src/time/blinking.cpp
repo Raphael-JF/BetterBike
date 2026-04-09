@@ -3,43 +3,72 @@
 #include "blinking.h"
 #include "lcd/lcd_core.h"
 
-blinking* blinkings_to_update[] = {
+blinking* active_blinkings[] = {
     NULL, // IDX_COMPASS_FRAME_BLINKING : clignotement du cadre de la boussole en cas de non-fix GPS
 };
-blinking compass_frame_blinking;
+blinking compass_frame_blinking = blinking_create(500, 1) ;
 
 
 struct blinking blinking_create(uint16_t period, uint8_t initial_state) {
     struct blinking b;
+    b.initial_state = initial_state;
     b.state = initial_state;
     b.period = period;
     b.last_toggle_millis = 0;
+    b.just_started = 0;
     return b;
 }
 
-uint8_t update_one_blinking(struct blinking* b) {
-    unsigned long current_millis = millis();
-    if (current_millis - b->last_toggle_millis >= b->period) {
-        b->state = !b->state; // toggle state
-        b->last_toggle_millis = current_millis;
-        return 1;
-    } else {
-        return 0;
-    }
+
+
+void blinking_stop(uint8_t index) {
+    active_blinkings[index] = NULL;
 }
 
-void update_all_blinkings() {
-    blinking *_compass_blinking = blinkings_to_update[IDX_COMPASS_FRAME_BLINKING];
+void blinking_start(uint8_t index, struct blinking* b) {
+    b->state = b->initial_state;
+    b->last_toggle_millis = millis();
+    b->just_started = 1;
+    active_blinkings[index] = b;
+}
+
+uint8_t blinking_respring(uint8_t index) {
+    struct blinking* b = active_blinkings[index];
+    if (b == NULL) {
+        return 0;
+    }
+    unsigned long current_millis = millis();
+    unsigned long elapsed = current_millis - b->last_toggle_millis;
+    if (elapsed >= b->period) {
+        unsigned long toggles = elapsed / b->period;
+        if ((toggles & 1UL) != 0UL) {
+            b->state = !b->state;
+            b->last_toggle_millis += toggles * b->period;
+            return 1;
+        }
+        b->last_toggle_millis += toggles * b->period;
+    } else if(b->just_started) {
+        b->just_started = 0;
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t update_compass_frame_blinking(){
 
     // Clignotement du cadre de la boussole si pas de fix GPS
-    if(_compass_blinking != NULL && update_one_blinking(_compass_blinking)) {
-        if (_compass_blinking->state) {
+    if(blinking_respring(IDX_COMPASS_FRAME_BLINKING)){
+        if (compass_frame_blinking.state) {
             highlight_compass_frame();
         }
         else{
-            clear_compass_frame();
-            calculate_gps_grid();
+            unhighlight_compass_frame();
         }
-        lcd_respring_compass();
+        return 1;
     }
+    return 0;
+}
+
+void update_all_blinkings() {
+    update_compass_frame_blinking();
 }

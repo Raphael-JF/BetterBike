@@ -20,38 +20,29 @@
 void setup() {
     Serial.begin(115200);
 
+    // initialiser la connexion I2C pour l'écran LCD 
     Wire.begin(21, 22); // SDA, SCL
+
+    // initaliser la connexion série pour le GPS
     gpsSerial.begin(9600, SERIAL_8N1, 16, 17); // UART1
-// set up the lcd's number of columns and rows:
+
+    // initialiser l'écran LCD, attendre que le PCF8574 soit prêt
     while (lcd.begin(16, 2, LCD_5x8DOTS) != 1) {
         Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong. Only pins numbers: 4,5,6,16,11,12,13,14 are legal."));
         delay(5000);   
     }
 
+
+    // initialiser la connexion Bluetooth
     ble.begin("VeloGPS");
     
 
-
+    // afficher l'heure et le statut GPS par défaut
     lcd.setCursor(0, 0);
     lcd.print("--:--  GPS");
 
-    // logo bluetooth :
-    uint8_t bluetooth_car[8] = {
-        0b00110,
-        0b10101,
-        0b01101,
-        0b00110,
-        0b01101,
-        0b10101,
-        0b00110,
-        0b00000
-    };
-
-    lcd.createChar(6, bluetooth_car);
-    lcd_respring_gps_status();
-
+    // initialiser les caractères personnalisés pour l'icône de la boussole
     lcd.setCursor(13, 0);
-
     lcd.write(byte(0));
     lcd.write(byte(1));
     lcd.write(byte(2));
@@ -59,8 +50,16 @@ void setup() {
     lcd.write(byte(3));
     lcd.write(byte(4));
     lcd.write(byte(5));
-    clear_compass_frame();
-    lcd_respring_compass();
+
+    // dessiner le cadre de la boussole
+    clear_inner_compass();
+    if(calculate_compass_grid()){
+        lcd_respring_compass();
+    }
+
+    // afficher "Compass" à côté de l'icône de la boussole
+    lcd_respring_gps_status();
+
 
 
 }
@@ -68,59 +67,30 @@ void setup() {
 
 
 void loop() {
+    bool compass_needs_respring = false;
+    const unsigned long now = millis();
+    static unsigned long last_compass_sim_update = 0;
+    const unsigned long compass_sim_period_ms = 100;
 
-    update_all_blinkings();
+    if (now - last_compass_sim_update >= compass_sim_period_ms) {
+        unsigned long elapsed = now - last_compass_sim_update;
+        if (last_compass_sim_update == 0) {
+            elapsed = compass_sim_period_ms;
+        }
+        last_compass_sim_update = now;
 
-    // bearing_to_display += 0.1; // pour test d'affichage de la boussole, à remplacer par le calcul du bearing GPS réel
-    // if (bearing_to_display >= 2*M_PI) {
-    //     bearing_to_display -= 2*M_PI;
-    // }
-    // clear_compass_frame();
-    // lcd_respring_compass();
-    // Serial.println(last_gps_sync_millis);
-    unsigned long current_millis = millis();
-    switch (timeout_status) {
-        case GPS_TIMEOUT_STATUS_OK:
-            if (current_millis - last_gps_sync_millis > GPS_TIMEOUT_OLD){
-                // "OK" -> "OLD", faire clignoter le cadre de la boussole pour indiquer que les données GPS sont anciennes
-                timeout_status = GPS_TIMEOUT_STATUS_OLD;
-                compass_frame_blinking = COMPASS_FRAME_BLINKING_INIT;
-                blinkings_to_update[IDX_COMPASS_FRAME_BLINKING] = &compass_frame_blinking;
+        bearing_to_display += 1.0 * ((double)elapsed / 1000.0); // pour test d'affichage de la boussole, à remplacer par le calcul du bearing GPS réel
+        if (bearing_to_display >= 2 * M_PI) {
+            bearing_to_display = fmod(bearing_to_display, 2 * M_PI);
+        }
 
-            }
-            break;
-        case GPS_TIMEOUT_STATUS_OLD:
-            // faire clignoter le cadre de la boussole pour indiquer que les données GPS sont anciennes
-            if (current_millis - last_gps_sync_millis < GPS_TIMEOUT_OLD) {
-                // "OLD" -> "OK", arrêter de faire clignoter le cadre de la boussole
-                timeout_status = GPS_TIMEOUT_STATUS_OK;
-                blinkings_to_update[IDX_COMPASS_FRAME_BLINKING] = NULL;
-                clear_compass_frame();  // enlever le contour de la boussole
-                calculate_gps_grid();
-                lcd_respring_compass();
-            }
-            if (current_millis - last_gps_sync_millis > GPS_TIMEOUT_INVALID) {
-                // "OLD" -> "INVALID", activer le contour de la boussole pour indiquer que les données GPS sont invalides
-                timeout_status = GPS_TIMEOUT_STATUS_INVALID;
-                blinkings_to_update[IDX_COMPASS_FRAME_BLINKING] = NULL;
-                highlight_compass_frame(); // ajouter le contour de la boussole pour indiquer que les données GPS sont invalides
-                lcd_respring_compass();
-            }
-            break;
-        case GPS_TIMEOUT_STATUS_INVALID:
-            if (current_millis - last_gps_sync_millis < GPS_TIMEOUT_OLD) {
-                // "INVALID" -> "OK"
-                timeout_status = GPS_TIMEOUT_STATUS_OK;
-                clear_compass_frame();  // enlever le contour de la boussole
-                calculate_gps_grid();
-                lcd_respring_compass();
-            }
-            break;
+        if (calculate_compass_grid()) {
+            compass_needs_respring = true;
+        }
     }
+    
 
-
-
-
+    
     // 1. Lire les données GPS
     while (gpsSerial.available()) {
         gps.encode(gpsSerial.read());
@@ -140,17 +110,26 @@ void loop() {
     }
     if (gps_fix_active) {
         update_current_position();    
-        if (gps_time_fresh) {
-        last_got_gps_time.hours = gps.time.hour();
-        last_got_gps_time.minutes = gps.time.minute();
         
-    }
+        if (gps_time_fresh) {
+            last_got_gps_time.hours = gps.time.hour();
+            last_got_gps_time.minutes = gps.time.minute();
+        }
     }
 
 
     if (update_time()) {
         lcd_respring_time();
     }
+
+    // 3. Mettre à jour l'affichage de la boussole
+    compass_needs_respring |= update_compass_frame_blinking();
+    compass_needs_respring |= update_gps_timeout_status();
+
+    if (compass_needs_respring) {
+        lcd_respring_compass();
+    }
+
      
     while (ble.available()) {
         char c = ble.read();
@@ -158,6 +137,5 @@ void loop() {
     }
         // ici tu parses lat/lon
 
-
-    delay(250);
+    delay(5);
 }

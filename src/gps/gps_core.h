@@ -29,8 +29,16 @@ extern enum gps_timeout_status timeout_status;
 #define GPS_TIMEOUT_OLD 5000 // en ms, durée après laquelle on considère que les données GPS sont vieilles (mais pas encore invalides) si pas de nouvelle donnée reçue
 #define GPS_TIMEOUT_INVALID 10000 // en ms, durée après laquelle on considère que les données GPS sont invalides si pas de nouvelle donnée reçue
 
-
+/*
+    Met à jour la position actuelle en utilisant les données GPS.
+*/
 void update_current_position();
+
+
+/*
+    Met à jour le statut de timeout_status en fonction du temps écoulé depuis la dernière synchronisation avec les données GPS. Retourne 1 si l'affichage de la boussole doit être mis à jour, 0 sinon.
+*/
+uint8_t update_gps_timeout_status();
 
 
 #endif // GPS_CORE_H

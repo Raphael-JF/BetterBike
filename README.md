@@ -48,3 +48,22 @@ Le projet est maintenant compatible ESP32 (env `esp32dev`) avec:
 ### Lien utile
 
 https://www.espboards.dev/esp32/esp32-hw-394/
+
+### truc bluetooth
+
+```c
+
+    // logo bluetooth :
+    uint8_t bluetooth_car[8] = {
+        0b00110,
+        0b10101,
+        0b01101,
+        0b00110,
+        0b01101,
+        0b10101,
+        0b00110,
+        0b00000
+    };
+
+    lcd.createChar(6, bluetooth_car);
+```
