@@ -12,6 +12,8 @@
 #include "bluetooth/bluetooth.h"
 #include "time/blinking.h"
 
+#include "magnetometer/magnetometer.h"
+
 
 
 
@@ -35,6 +37,15 @@ void setup() {
 
     // initialiser la connexion Bluetooth
     ble.begin("VeloGPS");
+
+    // initialiser le magnétomètre
+    if (!magnetometer.begin(Wire, QMC5883P_SLAVE_ADDRESS)) {
+        while (1) {
+            Serial.println("Failed to find QMC5883P - check your wiring!");
+            delay(1000);
+        }
+    }
+    init_magnetometer();
     
 
     // afficher l'heure et le statut GPS par défaut
@@ -67,6 +78,17 @@ void setup() {
 
 
 void loop() {
+
+    MagnetometerData data;
+
+    if (magnetometer.readData(data)) {
+        Serial.print(" Heading (deg): ");
+        Serial.print(data.heading_degrees, 2);
+        Serial.println("°");
+    }
+
+
+        
     bool compass_needs_respring = false;
     
 
