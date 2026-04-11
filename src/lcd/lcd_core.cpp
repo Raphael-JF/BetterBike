@@ -6,6 +6,7 @@
 #include "lcd/binary_matrix.h"
 #include "gps/gps_core.h"
 #include "time/time_manager.h"
+#include "magnetometer/magnetometer.h"
 
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 struct compass_pos compass_pos = {2*H_gps, 2*W_gps};
@@ -34,10 +35,15 @@ void lcd_respring_gps_status() {
 
 
 uint8_t calculate_compass_grid(){
+    double math_compass_angle = M_PI_2 - bearing_to_display;
 
-    
-    double dx = cos(bearing_to_display);
-    double dy = -sin(bearing_to_display);
+    math_compass_angle = fmod(math_compass_angle, 2 * M_PI);
+    if (math_compass_angle < 0) {
+        math_compass_angle += 2 * M_PI;
+    }
+
+    double dx = cos(math_compass_angle);
+    double dy = -sin(math_compass_angle);
 
     uint8_t x = CX + round((double)(ARROW_LENGTH)*dx);
     uint8_t y = CY + round((double)(ARROW_LENGTH)*dy);
@@ -54,14 +60,14 @@ uint8_t calculate_compass_grid(){
     uint8_t cy = (uint8_t)CY;
 
 
-    if(bearing_to_display < M_PI / 2) {
+    if(math_compass_angle < M_PI / 2) {
         draw_line(cx, cy - 1, x, y - 1);
     }
-    else if(bearing_to_display < M_PI) {
+    else if(math_compass_angle < M_PI) {
         draw_line(cx - 1, cy - 1, x - 1, y - 1);
 
     }
-    else if(bearing_to_display < 3*M_PI/2) {
+    else if(math_compass_angle < 3*M_PI/2) {
         draw_line(cx - 1, cy, x - 1, y);
     }
     else{

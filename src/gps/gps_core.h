@@ -16,6 +16,8 @@ extern HardwareSerial gpsSerial;
 
 extern struct position waypoint_position;
 extern struct position current_position;
+extern double waypoint_bearing; // en radians, angle entre le nord et la ligne current_position -> waypoint_position, dans le sens des aiguilles d'une montre
+
 
 extern unsigned long last_gps_sync_millis;
 
@@ -39,7 +41,7 @@ void update_current_position();
     Met à jour bearing_to_display en radians pour pointer du current_position vers waypoint_position.
     Renvoie 1 si la valeur du bearing a changé, 0 sinon.
 */
-uint8_t update_bearing_to_waypoint();
+uint8_t update_waypoint_bearing();
 
 
 /*

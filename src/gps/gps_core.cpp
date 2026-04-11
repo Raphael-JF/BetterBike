@@ -13,6 +13,7 @@ HardwareSerial gpsSerial(1);
 
 struct position waypoint_position = {48.877234, 2.320267}; // école
 struct position current_position = {0.0, 0.0};
+double waypoint_bearing = 0.0; // en radians, angle entre le nord et la ligne current_position -> waypoint_position, dans le sens des aiguilles d'une montre
 unsigned long last_gps_sync_millis = 0;
 
 
@@ -29,7 +30,7 @@ void update_current_position() {
 
 
 
-uint8_t update_bearing_to_waypoint() {
+uint8_t update_waypoint_bearing() {
     double bearing_degrees = gps.courseTo(
         current_position.lat,
         current_position.lng,
@@ -41,22 +42,13 @@ uint8_t update_bearing_to_waypoint() {
         return 0;
     }
 
-    double theta_gps = radians(bearing_degrees);
+    double new_bearing = radians(bearing_degrees);
 
-    // Conversion GPS -> math
-    double new_bearing = M_PI / 2 - theta_gps;
-
-    // Normalisation entre 0 et 2π
-    new_bearing = fmod(new_bearing, 2 * M_PI);
-    if (new_bearing < 0) {
-        new_bearing += 2 * M_PI;
-    }
-
-    if (fabs(new_bearing - bearing_to_display) < 0.0001) {
+    if (fabs(new_bearing - waypoint_bearing) < 0.0001) {
         return 0;
     }
 
-    bearing_to_display = new_bearing;
+    waypoint_bearing = new_bearing;
     return 1;
 }
 
@@ -69,7 +61,6 @@ uint8_t update_gps_timeout_status() {
                 // "OK" -> "OLD", faire clignoter le cadre de la boussole pour indiquer que les données GPS sont anciennes
                 timeout_status = GPS_TIMEOUT_STATUS_OLD;
                 blinking_start(IDX_COMPASS_FRAME_BLINKING, &compass_frame_blinking);
-                update_compass_frame_blinking(); 
                 return 1;
             }
             break;

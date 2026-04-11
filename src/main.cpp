@@ -35,7 +35,7 @@ void setup() {
     }
 
 
-    // initialiser la connexion Bluetooth
+    // initialiser l'advertising Bluetooth
     ble.begin("VeloGPS");
 
     // initialiser le magnétomètre
@@ -50,7 +50,7 @@ void setup() {
 
     // afficher l'heure et le statut GPS par défaut
     lcd.setCursor(0, 0);
-    lcd.print("--:--  GPS");
+    lcd.print("--:--");
 
     // initialiser les caractères personnalisés pour l'icône de la boussole
     lcd.setCursor(13, 0);
@@ -63,10 +63,9 @@ void setup() {
     lcd.write(byte(5));
 
     // dessiner le cadre de la boussole
+    unhighlight_compass_frame();
     clear_inner_compass();
-    if(calculate_compass_grid()){
-        lcd_respring_compass();
-    }
+    lcd_respring_compass();
 
     // afficher "Compass" à côté de l'icône de la boussole
     lcd_respring_gps_status();
@@ -75,36 +74,33 @@ void setup() {
 
 }
 
+uint8_t do_update_bearing_to_display = 0;
+uint8_t do_update_magnetometer_bearing = 0;
+uint8_t do_update_waypoint_bearing = 0;
+
+uint8_t do_calculate_compass_grid = 0;
+uint8_t do_respring_compass = 0;
+
 
 
 void loop() {
 
-    MagnetometerData data;
 
-    if (magnetometer.readData(data)) {
-        Serial.print(" Heading (deg): ");
-        Serial.print(data.heading_degrees, 2);
-        Serial.println("°");
-    }
-
-
-        
-    bool compass_needs_respring = false;
     
 
     
-    // 1. Lire les données GPS
+    // Lire les données GPS
     while (gpsSerial.available()) {
         gps.encode(gpsSerial.read());
     }
+    
+    const uint8_t gps_time_fresh = gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000;
+    const uint8_t gps_date_fresh = gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000;
+    const uint8_t gps_fix_active = gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000;
 
-    const bool gps_time_fresh = gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000;
-    const bool gps_date_fresh = gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000;
-    const bool gps_fix_active = gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000;
 
 
-    // 2. Utiliser les données seulement si elles sont valides et fraîches 
-
+    //  Utiliser les données seulement si elles sont valides et fraîches 
     if (gps_date_fresh) {
         utc_day = gps.date.day();
         utc_month = gps.date.month();
@@ -115,34 +111,59 @@ void loop() {
 
     if (gps_fix_active) {
         update_current_position();
-        if (update_bearing_to_waypoint() && calculate_compass_grid()) {
-            compass_needs_respring = true;
-        }
+        do_update_waypoint_bearing = 1;
         if (gps_time_fresh) {
             last_got_gps_time.hours = gps.time.hour();
             last_got_gps_time.minutes = gps.time.minute();
         }
     }
 
+    if (magnetometer.readData(magnetometer_data)) {
+        do_update_magnetometer_bearing = 1;
+    }
 
     if (update_time()) {
         lcd_respring_time();
     }
 
     if (bluetooth_update_waypoint_from_stream()) {
-        if (gps_fix_active && update_bearing_to_waypoint() && calculate_compass_grid()) {
-            compass_needs_respring = true;
-        }
-    }
-
-    // 3. Mettre à jour l'affichage de la boussole
-    compass_needs_respring |= update_compass_frame_blinking();
-    compass_needs_respring |= update_gps_timeout_status();
-
-    if (compass_needs_respring) {
-        lcd_respring_compass();
+        do_update_waypoint_bearing = 1;
     }
     
+    do_respring_compass |= update_gps_timeout_status();
+    do_respring_compass |= update_compass_frame_blinking();
+
+
+
+    // First layer
+    if (do_update_waypoint_bearing && update_waypoint_bearing()) {
+        do_update_waypoint_bearing = 0;
+        do_update_bearing_to_display = 1;
+    }
+
+    if (do_update_magnetometer_bearing && update_magnetometer_bearing()) {
+        do_update_magnetometer_bearing = 0;
+        do_update_bearing_to_display = 1;
+    }
+
+    // Second layer
+    if (do_update_bearing_to_display && update_bearing_to_display()){
+        do_update_bearing_to_display = 0;
+        do_calculate_compass_grid = 1;
+    }
+
+    // Third layer
+    if (do_calculate_compass_grid) {
+        do_calculate_compass_grid = 0;
+        calculate_compass_grid();
+        do_respring_compass = 1;
+    }
+
+    // Fourth layer
+    if (do_respring_compass) {
+        do_respring_compass = 0;
+        lcd_respring_compass();
+    }
 
     delay(5);
 }
