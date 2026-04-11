@@ -46,6 +46,7 @@ void setup() {
         }
     }
     init_magnetometer();
+    magnetometer.setOffset(-900,-360,0); // à ajuster pour compenser les perturbations magnétiques locales (aimantation résiduelle du vélo, etc.)
     
 
     // afficher l'heure et le statut GPS par défaut

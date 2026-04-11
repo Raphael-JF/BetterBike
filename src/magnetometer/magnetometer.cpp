@@ -17,7 +17,7 @@ void init_magnetometer(){
     // op_mode: Allowed values are SUSPEND, NORMAL, SINGLE_MEASUREMENT, CONTINUOUS_MEASUREMENT
     OperationMode op_mode = OperationMode::NORMAL;
     // full_scale: Allowed values are FS_2G, FS_8G, FS_12G, FS_30G
-    MagFullScaleRange full_scale = MagFullScaleRange::FS_2G;
+    MagFullScaleRange full_scale = MagFullScaleRange::FS_8G;
     // over_sample_ratio: Allowed values are OSR_1, OSR_2, OSR_4, OSR_8
     MagOverSampleRatio over_sample_ratio = MagOverSampleRatio::OSR_4;
     // down_sample_ratio: Allowed values are DSR_1, DSR_2, DSR_4, DSR_8
@@ -37,9 +37,9 @@ void init_magnetometer(){
     }
 
     //Find the magnetic declination : https://www.magnetic-declination.com/
-    // float declination_deg = MagnetometerUtils::dmsToDecimalDegrees(1, 20);  // in France, Bordeaux
+    float declination_deg = MagnetometerUtils::dmsToDecimalDegrees(1, 20);  // in France, Bordeaux
 
-    // magnetometer.setDeclination(declination_deg);
+    magnetometer.setDeclination(declination_deg);
 }
 
 
@@ -47,7 +47,15 @@ uint8_t update_magnetometer_bearing() {
     if (fabs(magnetometer_bearing - magnetometer_data.heading) < 0.0001f) {
         return 0;
     }
-    magnetometer_bearing = magnetometer_data.heading;
+    // Serial.print("Time: "); Serial.print(millis());
+    // Serial.print("| X:");
+    // // Affichage des données brutes du magnétomètre pour le debug (uint16_t pour éviter les problèmes d'affichage de int16_t négatifs)
+    // Serial.print(magnetometer_data.raw.x, DEC);
+    // Serial.print("| Y:");
+    // Serial.println(magnetometer_data.raw.y, DEC);
+    Serial.print("|bearing: ");
+    Serial.println(360 - magnetometer_data.heading_degrees, 2);
+    magnetometer_bearing = 2*M_PI-magnetometer_data.heading;
     return 1;
 }
 
