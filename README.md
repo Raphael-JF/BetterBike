@@ -43,7 +43,8 @@ Le projet est maintenant compatible ESP32 (env `esp32dev`) avec:
     pAdvertising->setMinInterval(160); // ~100 ms
     pAdvertising->setMaxInterval(800); // ~500 ms
     ```
-
+- Plus tard, on pourra créer une app mobile qui permet de parler avec l'ordinateur de bord. Pour l'instant ça se fait via l'appli web, mais ça dépend d'internet
+- On doit maintenant pouvoir calibrer le magnétomètre pour compenser les perturbations magnétiques locales (hard iron et soft iron). On va se renseigner et ça va être cool à faire. 
 
 ### Lien utile
 
