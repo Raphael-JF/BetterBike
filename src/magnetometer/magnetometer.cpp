@@ -8,7 +8,7 @@ void init_magnetometer(){
     
 
     // The desired output data rate in Hz.  Allowed values are 10.0, 50.0, 100.0 and 200.0HZ.
-    float data_rate_hz = 200.0f;
+    float data_rate_hz = 10.0f;
     // op_mode: Allowed values are SUSPEND, NORMAL, SINGLE_MEASUREMENT, CONTINUOUS_MEASUREMENT
     OperationMode op_mode = OperationMode::NORMAL;
     // full_scale: Allowed values are FS_2G, FS_8G, FS_12G, FS_30G
