@@ -179,8 +179,9 @@ void clear_inner_compass() {
 uint8_t update_compass_frame_blinking(){
 
     // Clignotement du cadre de la boussole si pas de fix GPS
-    if(blinking_respring(IDX_COMPASS_FRAME_BLINKING)){
-        if (compass_frame_blinking.state){            highlight_compass_frame();
+    if(blinking_update(compass_frame_blinking)){
+        if (compass_frame_blinking.blink_state){
+            highlight_compass_frame();
         }
         else{
             unhighlight_compass_frame();

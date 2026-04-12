@@ -71,10 +71,12 @@ void setup() {
 
     // afficher "Compass" à côté de l'icône de la boussole
     lcd_load_view(CALIBRATION_VIEW);
-
-
-
 }
+
+
+uint8_t gps_time_fresh;
+uint8_t gps_date_fresh;
+uint8_t gps_fix_active;
 
 uint8_t do_update_bearing_to_display = 0;
 uint8_t do_update_magnetometer_bearing = 0;
@@ -82,7 +84,6 @@ uint8_t do_update_waypoint_bearing = 0;
 
 uint8_t do_calculate_compass_grid = 0;
 uint8_t do_respring_compass = 0;
-
 
 
 void loop() {
@@ -96,9 +97,9 @@ void loop() {
         gps.encode(gpsSerial.read());
     }
     
-    const uint8_t gps_time_fresh = gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000;
-    const uint8_t gps_date_fresh = gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000;
-    const uint8_t gps_fix_active = gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000;
+    gps_time_fresh = gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000;
+    gps_date_fresh = gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000;
+    gps_fix_active = gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000;
 
 
 

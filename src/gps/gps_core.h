@@ -5,6 +5,10 @@
 #include <HardwareSerial.h>
 
 
+
+#define GPS_TIMEOUT_OLD 5000 // en ms, durée après laquelle on considère que les données GPS sont vieilles (mais pas encore invalides) si pas de nouvelle donnée reçue
+#define GPS_TIMEOUT_INVALID 10000 // en ms, durée après laquelle on considère que les données GPS sont invalides si pas de nouvelle donnée reçue
+
 struct position {
     double lat;
     double lng;
@@ -28,8 +32,6 @@ enum gps_timeout_status {
 };
 extern enum gps_timeout_status timeout_status;
 
-#define GPS_TIMEOUT_OLD 5000 // en ms, durée après laquelle on considère que les données GPS sont vieilles (mais pas encore invalides) si pas de nouvelle donnée reçue
-#define GPS_TIMEOUT_INVALID 10000 // en ms, durée après laquelle on considère que les données GPS sont invalides si pas de nouvelle donnée reçue
 
 /*
     Met à jour la position actuelle en utilisant les données GPS.

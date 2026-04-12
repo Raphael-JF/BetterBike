@@ -61,7 +61,7 @@ uint8_t update_gps_timeout_status() {
             if (current_millis - last_gps_sync_millis > GPS_TIMEOUT_OLD){
                 // "OK" -> "OLD", faire clignoter le cadre de la boussole pour indiquer que les données GPS sont anciennes
                 timeout_status = GPS_TIMEOUT_STATUS_OLD;
-                blinking_start(IDX_COMPASS_FRAME_BLINKING, &compass_frame_blinking);
+                blinking_start(compass_frame_blinking);
                 return 1;
             }
             break;
@@ -69,14 +69,14 @@ uint8_t update_gps_timeout_status() {
             if (current_millis - last_gps_sync_millis < GPS_TIMEOUT_OLD) {
                 // "OLD" -> "OK", arrêter de faire clignoter le cadre de la boussole
                 timeout_status = GPS_TIMEOUT_STATUS_OK;
-                blinking_stop(IDX_COMPASS_FRAME_BLINKING);
+                blinking_stop(compass_frame_blinking);
                 highlight_compass_frame(); 
                 return 1;
             }
             if (current_millis - last_gps_sync_millis > GPS_TIMEOUT_INVALID) {
                 // "OLD" -> "INVALID", Désactiver le contour de la boussole pour indiquer que les données GPS sont invalides
                 timeout_status = GPS_TIMEOUT_STATUS_INVALID;
-                blinking_stop(IDX_COMPASS_FRAME_BLINKING);
+                blinking_stop(compass_frame_blinking);
                 unhighlight_compass_frame(); // enlever le contour de la boussole pour indiquer que les données GPS sont invalides
                 return 1;
             }
