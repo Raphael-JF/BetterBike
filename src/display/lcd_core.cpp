@@ -10,7 +10,7 @@
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 
 enum view_idx current_view = NO_VIEW;
-struct view* active_view = nullptr;
+struct view* active_view;
 
 
 void compass_title_on_enter(void) {
@@ -41,8 +41,10 @@ void calibration_text_render(void) {}
 
 struct component calibration_components[] = {Time, Compass};
 struct component compass_components[] = {Time, Compass};
+struct component gps_components[] = {Time, Compass};
 struct view calibration_view = {2, calibration_components};
 struct view compass_view = {2, compass_components};
+struct view gps_view = {2, gps_components};
 struct view empty_view = {0, nullptr};
 
 
@@ -52,7 +54,8 @@ struct view* map_view(enum view_idx view) {
             return &calibration_view;
         case COMPASS_VIEW:
             return &compass_view;
-        case GPS_STATUS_VIEW:
+        case GPS_VIEW:
+                return &gps_view; // la vue GPS est identique à la vue boussole, mais avec un titre différent
         case NO_VIEW:
         default:
             return &empty_view;

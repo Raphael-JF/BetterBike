@@ -13,6 +13,12 @@ struct blinking {
     uint8_t just_started; // flag pour indiquer que le clignotement vient d'être initialisé, pour réagir immédiatement.
 };
 
+enum blinking_response : uint8_t {
+    BLINKING_NO_CHANGE = 0,
+    BLINKING_STATE_OFF = 1, // blink_state changed to 0
+    BLINKING_STATE_ON = 2, // blink_state changed to 1
+};
+
 
 /*
     Crée une structure de clignotement avec la période et l'état initial spécifiés.
@@ -21,9 +27,9 @@ struct blinking blinking_create(uint16_t period, uint8_t initial_blink_state) ;
 
 
 /*
-    Met à jour l'état de b en fonction du temps écoulé. Retourne 1 si le blinking est actif et l'état a changé, ou si le clignotement vient d'être démarré, 0 sinon.
+    Updates the blinking state based on the elapsed time. Should be called regularly (e.g. in the main loop) for each blinking structure.
 */
-uint8_t blinking_update(struct blinking b) ;
+enum blinking_response blinking_update(struct blinking b) ;
 
 
 /*

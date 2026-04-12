@@ -52,66 +52,109 @@ void setup() {
     
 
     // charger la vue par défaut (inclut l'initialisation des composants, dont la boussole)
-    lcd_load_view(CALIBRATION_VIEW);
+    lcd_load_view(GPS_VIEW);
 }
 
 
-uint8_t gps_time_fresh;
-uint8_t gps_date_fresh;
-uint8_t gps_fix_fresh;
+
 
 
 void loop() {
 
-
+    switch (current_view)
+    {
+case CALIBRATION_VIEW:
+    
     
 
-    
-    // Lire les données GPS
-    while (gpsSerial.available()) {
-        gps.encode(gpsSerial.read());
-    }
-    
-    gps_time_fresh = gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000;
-    gps_date_fresh = gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000;
-    gps_fix_fresh = gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000;
 
 
 
-    //  Utiliser les données seulement si elles sont valides et fraîches 
-    if (gps_date_fresh) {
-        utc_day = gps.date.day();
-        utc_month = gps.date.month();
-        utc_year = gps.date.year();
-    }
 
 
 
-    if (gps_fix_fresh) {
-        update_current_position();
+
+
+case COMPASS_VIEW:
+
+
+
+
+
+
+
+
+
+    break;
+
+case GPS_VIEW:
+    // if new GPS data is available
+    if(read_gps_data()){
         warn_component(Compass, CHANGED_CURRENT_POSITION);
-        if (gps_time_fresh) {
-            last_got_gps_time.hours = gps.time.hour();
-            last_got_gps_time.minutes = gps.time.minute();
-        }
     }
 
+    // if a new waypoint is sent by Bluetooth
+    if (read_bluetooth_data()) {
+        warn_component(Compass, CHANGED_WAYPOINT_POSITION);
+    }
+
+    // if the magnetometer bearing has changed
     if(update_magnetometer_bearing()){
         warn_component(Compass, CHANGED_MAGNETOMETER_BEARING);
     }
 
-    if (bluetooth_update_waypoint_from_stream()) {
-        warn_component(Compass, CHANGED_WAYPOINT_POSITION);
+    // if the Compass frame should blink
+    switch (blinking_update(compass_frame_blinking)) {
+        case BLINKING_STATE_ON:
+            warn_component(Compass, DO_HIGHLIGHT_FRAME);
+            break;
+        case BLINKING_STATE_OFF:
+            warn_component(Compass, DO_UNHIGHLIGHT_FRAME);
+            break;
+        default:
+            break;
     }
 
-    if(update_compass_frame_blinking() || update_gps_timeout_status()){
-        warn_component(Compass, CHANGED_COMPASS_GRID);
+    // if the GPS timeout status has changed
+    switch (update_gps_timeout_status()) {
+        case OK_TO_OLD:
+            warn_component(Compass, DO_HIGHLIGHT_FRAME);
+            break;
+        case OLD_TO_OK:
+            blinking_stop(compass_frame_blinking);
+            warn_component(Compass, DO_HIGHLIGHT_FRAME);
+            break;
+        case OLD_TO_INVALID:
+            blinking_stop(compass_frame_blinking);
+            warn_component(Compass, DO_UNHIGHLIGHT_FRAME);
+            break;
+        case INVALID_TO_OK:
+            warn_component(Compass, DO_HIGHLIGHT_FRAME);
+            break;
+        default:
+            break;
     }
 
-
+    // if the minutes changed or if the new GPS time data made them change
     if(update_time()){
         warn_component(Time, CHANGED_CURRENT_TIME);
     }
+
+
+    read_gps_data();
+    break;
+        
+    
+    
+
+
+default:
+    break;
+}
+    
+
+
+    
 
 
     lcd_update_current_view();

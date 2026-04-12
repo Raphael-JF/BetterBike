@@ -2,10 +2,13 @@
 #include <TinyGPS++.h>
 #include <math.h>
 
+
 #include "gps_core.h"
-#include "utils/blinking.h"
 #include "display/lcd_core.h"
 #include "display/compass.h"
+#include "display/clock.h"
+#include "utils/blinking.h"
+#include "utils/flag_manager.h"
 
 
 TinyGPSPlus gps;
@@ -16,9 +19,9 @@ struct position waypoint_position = {48.877234, 2.320267}; // école
 struct position current_position = {0.0, 0.0};
 double waypoint_bearing = 0.0; // en radians, angle entre le nord et la ligne current_position -> waypoint_position, dans le sens des aiguilles d'une montre
 unsigned long last_gps_sync_millis = 0;
-
-
 enum gps_timeout_status timeout_status = GPS_TIMEOUT_STATUS_INVALID;
+flag_manager* gps_data_flags = create_flag_manager(NUM_GPS_FLAGS);
+
 
 
 
@@ -28,7 +31,6 @@ void update_current_position() {
     current_position.lng = gps.location.lng();
     last_gps_sync_millis = millis();
 }
-
 
 
 uint8_t update_waypoint_bearing() {
@@ -54,41 +56,39 @@ uint8_t update_waypoint_bearing() {
 }
 
 
-uint8_t update_gps_timeout_status() {
-    unsigned long current_millis = millis();
-    switch (timeout_status) {
-        case GPS_TIMEOUT_STATUS_OK:
-            if (current_millis - last_gps_sync_millis > GPS_TIMEOUT_OLD){
-                // "OK" -> "OLD", faire clignoter le cadre de la boussole pour indiquer que les données GPS sont anciennes
-                timeout_status = GPS_TIMEOUT_STATUS_OLD;
-                blinking_start(compass_frame_blinking);
-                return 1;
-            }
-            break;
-        case GPS_TIMEOUT_STATUS_OLD:
-            if (current_millis - last_gps_sync_millis < GPS_TIMEOUT_OLD) {
-                // "OLD" -> "OK", arrêter de faire clignoter le cadre de la boussole
-                timeout_status = GPS_TIMEOUT_STATUS_OK;
-                blinking_stop(compass_frame_blinking);
-                highlight_compass_frame(); 
-                return 1;
-            }
-            if (current_millis - last_gps_sync_millis > GPS_TIMEOUT_INVALID) {
-                // "OLD" -> "INVALID", Désactiver le contour de la boussole pour indiquer que les données GPS sont invalides
-                timeout_status = GPS_TIMEOUT_STATUS_INVALID;
-                blinking_stop(compass_frame_blinking);
-                unhighlight_compass_frame(); // enlever le contour de la boussole pour indiquer que les données GPS sont invalides
-                return 1;
-            }
-            break;
-        case GPS_TIMEOUT_STATUS_INVALID:
-            if (current_millis - last_gps_sync_millis < GPS_TIMEOUT_OLD) {
-                // "INVALID" -> "OK"
-                timeout_status = GPS_TIMEOUT_STATUS_OK;
-                highlight_compass_frame();
-                return 1;
-            }
-            break;
+uint8_t read_gps_data() {
+    while (gpsSerial.available()) {
+        gps.encode(gpsSerial.read());
     }
+
+    if(gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000){
+        set_flag(gps_data_flags, GPS_TIME_FRESH);
+    }
+    if(gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000){
+        set_flag(gps_data_flags, GPS_DATE_FRESH);
+    }
+    if(gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000){
+        set_flag(gps_data_flags, GPS_FIX_FRESH);
+    }
+
+
+    if (is_flag_set(gps_data_flags, GPS_DATE_FRESH)) {
+        utc_day = gps.date.day();
+        utc_month = gps.date.month();
+        utc_year = gps.date.year();
+    }
+
+
+    if (is_flag_set(gps_data_flags, GPS_FIX_FRESH)) {
+        update_current_position();
+        if (is_flag_set(gps_data_flags, GPS_TIME_FRESH)) {
+            last_got_gps_time.hours = gps.time.hour();
+            last_got_gps_time.minutes = gps.time.minute();
+        }
+        clear_all_flags(gps_data_flags);
+        return 1;
+
+    }
+    clear_all_flags(gps_data_flags);
     return 0;
 }

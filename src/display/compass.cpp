@@ -61,12 +61,56 @@ void compass_component_update() {
         }
     }
 
+    if (is_flag_set(flags, DO_HIGHLIGHT_FRAME) && is_flag_set(flags, DO_UNHIGHLIGHT_FRAME)) {
+        Serial.println("Warning: both highlight and unhighlight frame flags are set at the same time. This should not happen.");
+    }
+    
+    if (is_flag_set(flags, DO_HIGHLIGHT_FRAME)) {
+        highlight_compass_frame();
+        set_flag(flags, CHANGED_COMPASS_GRID);
+    }
+
+    if (is_flag_set(flags, DO_UNHIGHLIGHT_FRAME)) {
+        unhighlight_compass_frame();
+        set_flag(flags, CHANGED_COMPASS_GRID);
+    }
+
     if (is_flag_set(flags, CHANGED_COMPASS_GRID)) {
 
         display_refresh_compass();
     }
 
     clear_all_flags(flags);
+}
+
+
+enum gps_timeout_status_transition update_gps_timeout_status() {
+    unsigned long current_millis = millis();
+    switch (timeout_status) {
+        case GPS_TIMEOUT_STATUS_OK:
+            if (current_millis - last_gps_sync_millis > GPS_TIMEOUT_OLD){
+                timeout_status = GPS_TIMEOUT_STATUS_OLD;
+                return OK_TO_OLD;
+            }
+            break;
+        case GPS_TIMEOUT_STATUS_OLD:
+            if (current_millis - last_gps_sync_millis < GPS_TIMEOUT_OLD) {
+                timeout_status = GPS_TIMEOUT_STATUS_OK;
+                return OLD_TO_OK;
+            }
+            if (current_millis - last_gps_sync_millis > GPS_TIMEOUT_INVALID) {
+                timeout_status = GPS_TIMEOUT_STATUS_INVALID;
+                return OLD_TO_INVALID;
+            }
+            break;
+        case GPS_TIMEOUT_STATUS_INVALID:
+            if (current_millis - last_gps_sync_millis < GPS_TIMEOUT_OLD) {
+                timeout_status = GPS_TIMEOUT_STATUS_OK;
+                return INVALID_TO_OK;
+            }
+            break;
+    }
+    return NO_TRANSITION;
 }
 
 
@@ -234,19 +278,3 @@ void clear_inner_compass() {
         }
     }
 }   
-
-
-uint8_t update_compass_frame_blinking(){
-
-    // Clignotement du cadre de la boussole si pas de fix GPS
-    if(blinking_update(compass_frame_blinking)){
-        if (compass_frame_blinking.blink_state){
-            highlight_compass_frame();
-        }
-        else{
-            unhighlight_compass_frame();
-        }
-        return 1;
-    }
-    return 0;
-}

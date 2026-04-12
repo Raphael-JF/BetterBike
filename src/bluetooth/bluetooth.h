@@ -12,6 +12,6 @@ extern BleSerial ble;
 	si une trame valide au format `latitude;longitude` est reçue.
 	Retourne 1 si le waypoint a changé, 0 sinon.
 */
-uint8_t bluetooth_update_waypoint_from_stream();
+uint8_t read_bluetooth_data();
 
 #endif // BLUETOOTH_H

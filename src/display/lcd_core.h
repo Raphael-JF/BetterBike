@@ -4,14 +4,6 @@
 #include <stdint.h>
 #include <LiquidCrystal_I2C.h>
 
-
-
-
-
-extern LiquidCrystal_I2C lcd;
-
-
-
 struct view {
     uint8_t num_components;
     struct component* components;
@@ -19,12 +11,22 @@ struct view {
 
 enum view_idx : uint8_t{
     NO_VIEW = 0,
-    GPS_STATUS_VIEW = 1,
+    GPS_VIEW = 1,
     CALIBRATION_VIEW = 2,
     COMPASS_VIEW = 3
 };
+extern LiquidCrystal_I2C lcd;
+extern enum view_idx current_view;
+extern struct view* active_view;
 
+extern struct view calibration_view;
+extern struct view compass_view;
+extern struct view empty_view;
 
+/*
+    Returns the corresponding struct view.
+*/
+struct view* map_view(enum view_idx view);
 
 /*
     Affiche la vue souhaitée. Une vue comprend deux zones d'affichage :

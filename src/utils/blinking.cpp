@@ -28,9 +28,9 @@ void blinking_start(struct blinking b) {
     b.working = 1;
 }
 
-uint8_t blinking_update(struct blinking b) {
+enum blinking_response blinking_update(struct blinking b) {
     if(!b.working) {
-        return 0;
+        return BLINKING_NO_CHANGE;
     }
     unsigned long elapsed = millis() - b.last_toggle_millis;
     if (elapsed >= b.period) {
@@ -38,13 +38,13 @@ uint8_t blinking_update(struct blinking b) {
         if ((toggles & 1UL) != 0UL) {
             b.blink_state = !b.blink_state;
             b.last_toggle_millis += toggles * b.period;
-            return 1;
+            return b.blink_state ? BLINKING_STATE_ON : BLINKING_STATE_OFF;
         }
         b.last_toggle_millis += toggles * b.period;
     } else if(b.just_started) {
         b.just_started = 0;
-        return 1;
+        return b.blink_state ? BLINKING_STATE_ON : BLINKING_STATE_OFF;
     }
-    return 0;
+    return BLINKING_NO_CHANGE;
 }
 

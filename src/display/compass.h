@@ -25,7 +25,17 @@ enum compass_flags : uint8_t {
     CHANGED_WAYPOINT_BEARING = 3,
     CHANGED_BEARING_TO_DISPLAY = 4,
     CHANGED_COMPASS_GRID = 5,
-    NUM_COMPASS_FLAGS = 6
+    DO_HIGHLIGHT_FRAME = 6,
+    DO_UNHIGHLIGHT_FRAME = 7,
+    NUM_COMPASS_FLAGS = 8
+};
+
+enum gps_timeout_status_transition {
+    NO_TRANSITION = 0,
+    OK_TO_OLD = 1,
+    OLD_TO_OK = 2,
+    OLD_TO_INVALID = 3,
+    INVALID_TO_OK = 4
 };
 
 extern struct compass_pos compass_pos;
@@ -36,48 +46,39 @@ extern blinking compass_frame_blinking;
 extern struct component Compass;
 
 
-/* 
-    Met à jour l'affichage de la boussole en utilisant la grille compass_grid. Doit être appelé après toute modification de cette grille pour que les changements soient visibles à l'écran.
-*/
-void display_refresh_compass();
+/**
+ * @brief Update GPS timeout state from elapsed time since last GPS sync.
+ * @return Timeout state transition that occurred, or 0 if no transition happened.
+ */
+enum gps_timeout_status_transition update_gps_timeout_status();
 
-/* 
-    Met à jour l'affichage de l'heure.
-*/
-void display_refresh_time();
-
-/* 
-    Allume les pixels de la grille compass_grid qui forment le cadre de la boussole. N'interfère pas avec ceux formant l'aiguille, ne nécessitant ainsi pas de recalcul de celle-ci pour faire clignoter le cadre.
-*/
-void highlight_compass_frame();
-
-
-/* 
-    Éteint les pixels de la grille compass_grid qui forment le cadre de la boussole. N'interfère pas avec ceux formant l'aiguille, ne nécessitant ainsi pas de recalcul de celle-ci pour faire clignoter le cadre.
-*/
-void unhighlight_compass_frame();
-
-/* 
-    Efface les pixels de la grille compass_grid qui forment le cadre de la boussole à l'exceptions de ceux formant le bord clignotant.
-*/
-void clear_inner_compass();
-
-/*
-    Dessine sur compass_grid l'aiguille, si besoin. Renvoie un non zéro si l'aiguille doit être redessinée (si le bearing a changé suffisamment pour que l'aiguille doive être redessinée), sinon 0.
-*/
+/**
+ * @brief Recompute the compass needle in `compass_grid` when heading changed enough.
+ * @return Non-zero if the grid changed and must be redrawn, 0 otherwise.
+ */
 uint8_t calculate_compass_grid();
 
+/**
+ * @brief Push current `compass_grid` pixels to LCD custom characters.
+ */
+void display_refresh_compass();
+
+/**
+ * @brief Enable the blinking compass frame pixels in `compass_grid`.
+ */
+void highlight_compass_frame();
+
+/**
+ * @brief Disable the blinking compass frame pixels in `compass_grid`.
+ */
+void unhighlight_compass_frame();
+
+/**
+ * @brief Clear compass interior pixels while preserving the frame pixels.
+ */
+void clear_inner_compass();
 
 
-/* 
-    Updates the compass_frame_blinking. return 1 if the blinking state has changed and the Compass frame needs to be redrawn, 0 otherwise.
-*/
-uint8_t update_compass_frame_blinking();
-
-/*
-    Demande un rafraîchissement LCD de la boussole au prochain passage de Compass.
-*/
-void compass_request_refresh();
 
 
 #endif // COMPASS_H

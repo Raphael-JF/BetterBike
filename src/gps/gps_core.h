@@ -14,6 +14,14 @@ struct position {
     double lng;
 };
 
+enum gps_data_flag {
+    GPS_TIME_FRESH = 0,
+    GPS_DATE_FRESH = 1,
+    GPS_FIX_FRESH = 2,
+    NUM_GPS_FLAGS = 3
+};
+
+
 extern  TinyGPSPlus gps;
 extern HardwareSerial gpsSerial;
 
@@ -45,11 +53,10 @@ void update_current_position();
 */
 uint8_t update_waypoint_bearing();
 
-
 /*
-    Met à jour le statut de timeout_status en fonction du temps écoulé depuis la dernière synchronisation avec les données GPS. Retourne 1 si l'affichage de la boussole doit être mis à jour, 0 sinon.
+    Reads GPS data from the serial port and updates the global GPS variables. Should be called when GPS data is needed. Returns 1 if a GPS fix was obtained and the current position was updated, 0 otherwise.
 */
-uint8_t update_gps_timeout_status();
+uint8_t read_gps_data() ;
 
 
 #endif // GPS_CORE_H

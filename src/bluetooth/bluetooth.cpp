@@ -36,7 +36,7 @@ bool parse_waypoint_message(const char* message, double* latitude, double* longi
 	return true;
 }
 
-uint8_t bluetooth_update_waypoint_from_stream() {
+uint8_t read_bluetooth_data() {
 	uint8_t waypoint_updated = 0;
 	char c;
 	while (ble.available()) {
