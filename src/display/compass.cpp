@@ -1,18 +1,49 @@
+#include <math.h>
 #include <stdint.h>
-#include "Arduino.h"
-#include <LiquidCrystal_I2C.h>
+#include "display/compass.h"
+#include "display/lcd_core.h"
+#include "utils/binary_matrix.h"
+#include "utils/blinking.h"
 
-#include "lcd/lcd_core.h"
-#include "lcd/binary_matrix.h"
-#include "gps/gps_core.h"
-#include "time/time_manager.h"
-#include "magnetometer/magnetometer.h"
-
-LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 struct compass_pos compass_pos = {2*H_gps, 2*W_gps};
 struct bin_matrix* compass_grid = create_bin_matrix(W_gps, H_gps);
 double bearing_to_display = 0.0;
+blinking compass_frame_blinking = blinking_create(500, 0) ;
 
+
+/*
+    Dessine une ligne de Bresenham entre les points (x0, y0) et (x1, y1) sur compass_grid. Les points doivent être dans les limites de la grille.
+*/
+void draw_line(int x0, int y0, int x1, int y1) {
+    int dx = fabs(x1 - x0);
+    int dy = fabs(y1 - y0);
+
+    int sx = (x0 < x1) ? 1 : -1;
+    int sy = (y0 < y1) ? 1 : -1;
+
+    int err = dx - dy;
+
+    while (1) {
+        // allume pixel
+        if (x0 >= 0 && x0 < W_gps && y0 >= 0 && y0 < H_gps)
+            set_pixel(compass_grid, x0, y0, true);
+
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        int e2 = 2 * err;
+
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
 
 /*
     Extrait une "char" de 5x8 pixels depuis la grille du compas, à la position donnée par x et y (en nombre de caractères, pas de pixels), et la stocke dans out (format attendu par lcd.createChar).
@@ -26,11 +57,6 @@ void extract_char(int x, int y, uint8_t out[8]) {
             }
         }
     }
-}
-
-void lcd_respring_gps_status() {
-    lcd.setCursor(6, 0);
-    lcd.print("no gps");
 }
 
 
@@ -76,7 +102,8 @@ uint8_t calculate_compass_grid(){
     return 1;
 }
 
-void lcd_respring_compass() {
+
+void display_refresh_compass() {
     uint8_t c00[8], c10[8], c20[8];
     uint8_t c01[8], c11[8], c21[8];
     extract_char(0, 0, c00);
@@ -92,16 +119,6 @@ void lcd_respring_compass() {
     lcd.createChar(3, c01);
     lcd.createChar(4, c11);
     lcd.createChar(5, c21);
-}
-
-
-
-
-void lcd_respring_time() {
-    char time_str[6];
-    snprintf(time_str, sizeof(time_str), "%02d:%02d", current_time.hours, current_time.minutes);
-    lcd.setCursor(0, 0);
-    lcd.print(time_str);
 }
 
 void highlight_compass_frame() {
@@ -122,9 +139,6 @@ void highlight_compass_frame() {
     set_pixel(compass_grid, W_gps - 1, 0, true);
     set_pixel(compass_grid, W_gps - 1, 1, true);
     set_pixel(compass_grid, W_gps - 2, 0, true);
-    
-
-
 }
 
 
@@ -145,9 +159,6 @@ void unhighlight_compass_frame() {
     set_pixel(compass_grid, W_gps - 1, 0, false);
     set_pixel(compass_grid, W_gps - 1, 1, false);
     set_pixel(compass_grid, W_gps - 2, 0, false);
-    
-
-
 }
 
 void clear_inner_compass() {
@@ -164,33 +175,17 @@ void clear_inner_compass() {
     }
 }   
 
-void draw_line(int x0, int y0, int x1, int y1) {
-    int dx = fabs(x1 - x0);
-    int dy = fabs(y1 - y0);
 
-    int sx = (x0 < x1) ? 1 : -1;
-    int sy = (y0 < y1) ? 1 : -1;
+uint8_t update_compass_frame_blinking(){
 
-    int err = dx - dy;
-
-    while (1) {
-        // allume pixel
-        if (x0 >= 0 && x0 < W_gps && y0 >= 0 && y0 < H_gps)
-            set_pixel(compass_grid, x0, y0, true);
-
-        if (x0 == x1 && y0 == y1)
-            break;
-
-        int e2 = 2 * err;
-
-        if (e2 > -dy) {
-            err -= dy;
-            x0 += sx;
+    // Clignotement du cadre de la boussole si pas de fix GPS
+    if(blinking_respring(IDX_COMPASS_FRAME_BLINKING)){
+        if (compass_frame_blinking.state){            highlight_compass_frame();
         }
-
-        if (e2 < dx) {
-            err += dx;
-            y0 += sy;
+        else{
+            unhighlight_compass_frame();
         }
+        return 1;
     }
+    return 0;
 }

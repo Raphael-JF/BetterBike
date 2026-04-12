@@ -1,7 +1,7 @@
- #include <stdint.h>
+#ifndef BLINKING_H
+#define BLINKING_H
 
-
-
+#include <stdint.h>
 
 
 struct blinking {
@@ -13,7 +13,6 @@ struct blinking {
 };
 
 extern blinking* active_blinkings[];
-extern blinking compass_frame_blinking;
 #define IDX_COMPASS_FRAME_BLINKING 0
 
 
@@ -41,9 +40,5 @@ void blinking_stop(uint8_t index);
 void blinking_start(uint8_t index, struct blinking* b);
 
 
-/* 
-    Met à jour l'état du clignotement du cadre de la boussole en fonction du statut GPS.
-*/
-uint8_t update_compass_frame_blinking();
 
-
+#endif // BLINKING_H

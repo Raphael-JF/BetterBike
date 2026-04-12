@@ -7,10 +7,11 @@
 
 
 #include "gps/gps_core.h"
-#include "time/time_manager.h"
-#include "lcd/lcd_core.h"
+#include "display/lcd_core.h"
+#include "display/compass.h"
+#include "display/clock.h"
 #include "bluetooth/bluetooth.h"
-#include "time/blinking.h"
+#include "utils/blinking.h"
 
 #include "magnetometer/magnetometer.h"
 
@@ -66,10 +67,10 @@ void setup() {
     // dessiner le cadre de la boussole
     unhighlight_compass_frame();
     clear_inner_compass();
-    lcd_respring_compass();
+    display_refresh_compass();
 
     // afficher "Compass" à côté de l'icône de la boussole
-    lcd_respring_gps_status();
+    lcd_load_view(CALIBRATION_VIEW);
 
 
 
@@ -124,7 +125,7 @@ void loop() {
     }
 
     if (update_time()) {
-        lcd_respring_time();
+        display_refresh_time();
     }
 
     if (bluetooth_update_waypoint_from_stream()) {
@@ -163,7 +164,7 @@ void loop() {
     // Fourth layer
     if (do_respring_compass) {
         do_respring_compass = 0;
-        lcd_respring_compass();
+        display_refresh_compass();
     }
 
     delay(5);

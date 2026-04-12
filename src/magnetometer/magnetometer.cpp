@@ -1,6 +1,6 @@
 #include "magnetometer.h"
 #include "gps/gps_core.h"
-#include "lcd/lcd_core.h"
+#include "display/compass.h"
 
 SensorQMC5883P magnetometer;
 MagnetometerData magnetometer_data;

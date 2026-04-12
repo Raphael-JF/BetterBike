@@ -1,12 +1,10 @@
 #include <stdint.h>
 #include "Arduino.h"
 #include "blinking.h"
-#include "lcd/lcd_core.h"
 
 blinking* active_blinkings[] = {
     NULL, // IDX_COMPASS_FRAME_BLINKING : clignotement du cadre de la boussole en cas de non-fix GPS
 };
-blinking compass_frame_blinking = blinking_create(500, 0) ;
 
 
 struct blinking blinking_create(uint16_t period, uint8_t initial_state) {
@@ -54,21 +52,3 @@ uint8_t blinking_respring(uint8_t index) {
     return 0;
 }
 
-uint8_t update_compass_frame_blinking(){
-
-    // Clignotement du cadre de la boussole si pas de fix GPS
-    if(blinking_respring(IDX_COMPASS_FRAME_BLINKING)){
-        if (compass_frame_blinking.state) {
-            highlight_compass_frame();
-        }
-        else{
-            unhighlight_compass_frame();
-        }
-        return 1;
-    }
-    return 0;
-}
-
-void update_all_blinkings() {
-    update_compass_frame_blinking();
-}

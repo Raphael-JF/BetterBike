@@ -3,8 +3,9 @@
 #include <math.h>
 
 #include "gps_core.h"
-#include "time/blinking.h"
-#include "lcd/lcd_core.h"
+#include "utils/blinking.h"
+#include "display/lcd_core.h"
+#include "display/compass.h"
 
 
 TinyGPSPlus gps;

@@ -1,11 +1,9 @@
-#ifndef TIME_MANAGER__H
-#define TIME_MANAGER
+#ifndef DISPLAY_CLOCK_H
+#define DISPLAY_CLOCK_H
 
 
-struct time_base{
-    uint8_t hours;
-    uint8_t minutes;
-};
+#include "utils/time.h"
+#include <stdint.h>
 
 // Base temporelle actuellement affichée à l'écran (en UTC)
 extern struct time_base current_time;
@@ -31,7 +29,11 @@ extern uint8_t utc_day;
     Renvoie 1 si l'heure a été mise à jour, 0 sinon (utile pour savoir s'il faut rafraîchir l'affichage).
 */
 int update_time(void);
-struct time_base utc_to_local(uint8_t day, uint8_t month, uint16_t year, struct time_base time_utc);
 
 
-#endif // TIME_MANAGER__H
+/* 
+    Met à jour l'affichage de l'heure. 
+*/
+void display_refresh_time();
+
+#endif // DISPLAY_CLOCK_H
