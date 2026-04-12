@@ -1,18 +1,28 @@
 #ifndef LCD_CORE__H
 #define LCD_CORE__H
 
+#include <stdint.h>
 #include <LiquidCrystal_I2C.h>
 
 
 
-#define NO_VIEW 0
-#define GPS_STATUS_VIEW 1
-#define CALIBRATION_VIEW 2
-#define COMPASS_VIEW 3
-
 
 
 extern LiquidCrystal_I2C lcd;
+
+
+
+struct view {
+    uint8_t num_components;
+    struct component* components;
+};
+
+enum view_idx : uint8_t{
+    NO_VIEW = 0,
+    GPS_STATUS_VIEW = 1,
+    CALIBRATION_VIEW = 2,
+    COMPASS_VIEW = 3
+};
 
 
 
@@ -21,7 +31,12 @@ extern LiquidCrystal_I2C lcd;
         - un affichage à droite de l'heure (colonnes 6 à 11 : 6 caractères) 
         - un autre affichage en bas à gauche (colonnes 0 à 11 : 12 caractères)
 */
-void lcd_load_view(uint8_t view);
+void lcd_load_view(enum view_idx view);
+
+/*
+    Met à jour les composants de la vue courante.
+*/
+void lcd_update_current_view(void);
 
 
 

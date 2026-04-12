@@ -11,7 +11,8 @@ struct bin_matrix {
 
 struct bin_matrix* create_bin_matrix(unsigned int width, unsigned int height);
 void free_bin_matrix(struct bin_matrix* matrix);
-void set_pixel(struct bin_matrix* matrix, unsigned int x, unsigned int y, uint8_t value);
-uint8_t get_pixel(struct bin_matrix* matrix, unsigned int x, unsigned int y);
+void set_pixel_bin_matrix(struct bin_matrix* matrix, unsigned int x, unsigned int y, uint8_t value);
+uint8_t get_pixel_bin_matrix(struct bin_matrix* matrix, unsigned int x, unsigned int y);
+void fill_matrix(struct bin_matrix* matrix, uint8_t value);
 
 #endif // BINARY_MATRIX_H

@@ -44,6 +44,9 @@ void init_magnetometer(){
 
 
 uint8_t update_magnetometer_bearing() {
+    if(!magnetometer.readData(magnetometer_data)){
+        return 0;
+    }
     if (fabs(magnetometer_bearing - magnetometer_data.heading) < 0.0001f) {
         return 0;
     }
@@ -55,7 +58,7 @@ uint8_t update_magnetometer_bearing() {
     // Serial.println(magnetometer_data.raw.y, DEC);
     Serial.print("|bearing: ");
     Serial.println(360 - magnetometer_data.heading_degrees, 2);
-    magnetometer_bearing = 2*M_PI-magnetometer_data.heading;
+    magnetometer_bearing = 2*M_PI - magnetometer_data.heading;
     return 1;
 }
 

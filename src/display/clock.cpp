@@ -26,6 +26,29 @@ uint8_t utc_month = 4;
 uint8_t utc_day = 0;
 
 
+void time_component_on_enter() {
+    lcd.setCursor(0, 0);
+    lcd.print("--:--");
+}
+
+void time_component_update() {
+    flag_manager* flags = Time.flags;
+
+    if (is_flag_set(flags, CHANGED_CURRENT_TIME)) {
+        display_refresh_time();
+    }
+    clear_all_flags(flags);
+
+}
+
+
+struct component Time = {
+    time_component_on_enter,
+    time_component_update,
+    create_flag_manager(NUM_CLOCK_FLAGS)
+};
+
+
 void display_refresh_time() {
     char time_str[6];
     snprintf(time_str, sizeof(time_str), "%02d:%02d", current_time.hours, current_time.minutes);

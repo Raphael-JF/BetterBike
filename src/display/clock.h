@@ -1,10 +1,10 @@
 #ifndef DISPLAY_CLOCK_H
 #define DISPLAY_CLOCK_H
 
-
-#include "utils/time.h"
 #include <stdint.h>
 
+#include "utils/time.h"
+#include "utils/component.h"
 // Base temporelle actuellement affichée à l'écran (en UTC)
 extern struct time_base current_time;
 
@@ -22,6 +22,13 @@ extern unsigned long last_time_sync_millis;
 extern uint16_t utc_year;
 extern uint8_t utc_month;
 extern uint8_t utc_day;
+
+enum clock_flags : uint8_t {
+    CHANGED_CURRENT_TIME = 0,
+    NUM_CLOCK_FLAGS = 1,
+};
+
+extern struct component Time;
 
 
 /*

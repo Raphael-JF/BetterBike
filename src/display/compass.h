@@ -9,19 +9,31 @@
 
 #define ARROW_LENGTH W_gps < H_gps ? W_gps/2 : H_gps/2
 
-
+#include "display/lcd_core.h"
 #include "utils/blinking.h"
+
 struct compass_pos {
     uint8_t x;
     uint8_t y;
 };
 
 
+enum compass_flags : uint8_t {
+    CHANGED_MAGNETOMETER_BEARING = 0,
+    CHANGED_CURRENT_POSITION = 1,
+    CHANGED_WAYPOINT_POSITION = 2, 
+    CHANGED_WAYPOINT_BEARING = 3,
+    CHANGED_BEARING_TO_DISPLAY = 4,
+    CHANGED_COMPASS_GRID = 5,
+    NUM_COMPASS_FLAGS = 6
+};
 
 extern struct compass_pos compass_pos;
 extern struct bin_matrix* compass_grid;
 extern double bearing_to_display;
 extern blinking compass_frame_blinking;
+
+extern struct component Compass;
 
 
 /* 
@@ -58,9 +70,14 @@ uint8_t calculate_compass_grid();
 
 
 /* 
-    Met à jour l'état du clignotement du cadre de la boussole en fonction du statut GPS.
+    Updates the compass_frame_blinking. return 1 if the blinking state has changed and the Compass frame needs to be redrawn, 0 otherwise.
 */
 uint8_t update_compass_frame_blinking();
+
+/*
+    Demande un rafraîchissement LCD de la boussole au prochain passage de Compass.
+*/
+void compass_request_refresh();
 
 
 #endif // COMPASS_H

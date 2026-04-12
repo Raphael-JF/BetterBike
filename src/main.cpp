@@ -11,9 +11,10 @@
 #include "display/compass.h"
 #include "display/clock.h"
 #include "bluetooth/bluetooth.h"
-#include "utils/blinking.h"
 
 #include "magnetometer/magnetometer.h"
+
+#include "utils/component.h"
 
 
 
@@ -50,40 +51,14 @@ void setup() {
     magnetometer.setOffset(-900,-360,0); // à ajuster pour compenser les perturbations magnétiques locales (aimantation résiduelle du vélo, etc.)
     
 
-    // afficher l'heure et le statut GPS par défaut
-    lcd.setCursor(0, 0);
-    lcd.print("--:--");
-
-    // initialiser les caractères personnalisés pour l'icône de la boussole
-    lcd.setCursor(13, 0);
-    lcd.write(byte(0));
-    lcd.write(byte(1));
-    lcd.write(byte(2));
-    lcd.setCursor(13, 1);
-    lcd.write(byte(3));
-    lcd.write(byte(4));
-    lcd.write(byte(5));
-
-    // dessiner le cadre de la boussole
-    unhighlight_compass_frame();
-    clear_inner_compass();
-    display_refresh_compass();
-
-    // afficher "Compass" à côté de l'icône de la boussole
+    // charger la vue par défaut (inclut l'initialisation des composants, dont la boussole)
     lcd_load_view(CALIBRATION_VIEW);
 }
 
 
 uint8_t gps_time_fresh;
 uint8_t gps_date_fresh;
-uint8_t gps_fix_active;
-
-uint8_t do_update_bearing_to_display = 0;
-uint8_t do_update_magnetometer_bearing = 0;
-uint8_t do_update_waypoint_bearing = 0;
-
-uint8_t do_calculate_compass_grid = 0;
-uint8_t do_respring_compass = 0;
+uint8_t gps_fix_fresh;
 
 
 void loop() {
@@ -99,7 +74,7 @@ void loop() {
     
     gps_time_fresh = gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000;
     gps_date_fresh = gps.date.isValid() && gps.date.isUpdated() && gps.date.age() < 2000;
-    gps_fix_active = gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000;
+    gps_fix_fresh = gps.location.isValid() && gps.location.isUpdated() && gps.location.age() < 2000;
 
 
 
@@ -112,61 +87,34 @@ void loop() {
 
 
 
-    if (gps_fix_active) {
+    if (gps_fix_fresh) {
         update_current_position();
-        do_update_waypoint_bearing = 1;
+        warn_component(Compass, CHANGED_CURRENT_POSITION);
         if (gps_time_fresh) {
             last_got_gps_time.hours = gps.time.hour();
             last_got_gps_time.minutes = gps.time.minute();
         }
     }
 
-    if (magnetometer.readData(magnetometer_data)) {
-        do_update_magnetometer_bearing = 1;
-    }
-
-    if (update_time()) {
-        display_refresh_time();
+    if(update_magnetometer_bearing()){
+        warn_component(Compass, CHANGED_MAGNETOMETER_BEARING);
     }
 
     if (bluetooth_update_waypoint_from_stream()) {
-        do_update_waypoint_bearing = 1;
-    }
-    
-    do_respring_compass |= update_gps_timeout_status();
-    do_respring_compass |= update_compass_frame_blinking();
-
-
-
-    // First layer
-    if (do_update_waypoint_bearing && update_waypoint_bearing()) {
-        do_update_waypoint_bearing = 0;
-        do_update_bearing_to_display = 1;
+        warn_component(Compass, CHANGED_WAYPOINT_POSITION);
     }
 
-    if (do_update_magnetometer_bearing && update_magnetometer_bearing()) {
-        do_update_magnetometer_bearing = 0;
-        do_update_bearing_to_display = 1;
+    if(update_compass_frame_blinking() || update_gps_timeout_status()){
+        warn_component(Compass, CHANGED_COMPASS_GRID);
     }
 
-    // Second layer
-    if (do_update_bearing_to_display && update_bearing_to_display()){
-        do_update_bearing_to_display = 0;
-        do_calculate_compass_grid = 1;
+
+    if(update_time()){
+        warn_component(Time, CHANGED_CURRENT_TIME);
     }
 
-    // Third layer
-    if (do_calculate_compass_grid) {
-        do_calculate_compass_grid = 0;
-        calculate_compass_grid();
-        do_respring_compass = 1;
-    }
 
-    // Fourth layer
-    if (do_respring_compass) {
-        do_respring_compass = 0;
-        display_refresh_compass();
-    }
+    lcd_update_current_view();
 
     delay(5);
 }

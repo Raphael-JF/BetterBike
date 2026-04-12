@@ -2,13 +2,73 @@
 #include <stdint.h>
 #include "display/compass.h"
 #include "display/lcd_core.h"
+#include "gps/gps_core.h"
 #include "utils/binary_matrix.h"
 #include "utils/blinking.h"
+#include "utils/flag_manager.h"
+#include "utils/component.h"
+#include "magnetometer/magnetometer.h"
+
 
 struct compass_pos compass_pos = {2*H_gps, 2*W_gps};
 struct bin_matrix* compass_grid = create_bin_matrix(W_gps, H_gps);
 double bearing_to_display = 0.0;
 blinking compass_frame_blinking = blinking_create(500, 0) ;
+
+void compass_component_on_enter();
+void compass_component_update();
+
+struct component Compass = {
+    compass_component_on_enter,
+    compass_component_update,
+    create_flag_manager(NUM_COMPASS_FLAGS)
+};
+
+
+void compass_component_on_enter() {
+    lcd.setCursor(13, 0);
+    lcd.write(byte(0));
+    lcd.write(byte(1));
+    lcd.write(byte(2));
+    lcd.setCursor(13, 1);
+    lcd.write(byte(3));
+    lcd.write(byte(4));
+    lcd.write(byte(5));
+
+    unhighlight_compass_frame();
+    clear_inner_compass();
+    display_refresh_compass();
+}
+
+void compass_component_update() {
+    flag_manager* flags = Compass.flags;
+    if(is_flag_set(flags, CHANGED_CURRENT_POSITION)  || is_flag_set(flags, CHANGED_WAYPOINT_POSITION)){
+        if(update_waypoint_bearing()){
+            set_flag(flags, CHANGED_WAYPOINT_BEARING);
+        }
+    }
+
+    if (is_flag_set(flags, CHANGED_WAYPOINT_BEARING) || is_flag_set(flags, CHANGED_MAGNETOMETER_BEARING)){
+        if(update_bearing_to_display()){
+            set_flag(flags, CHANGED_BEARING_TO_DISPLAY);
+        }
+    }
+
+    if (is_flag_set(flags, CHANGED_BEARING_TO_DISPLAY)){
+        if (calculate_compass_grid()) {
+
+            set_flag(flags, CHANGED_COMPASS_GRID);
+        }
+    }
+
+    if (is_flag_set(flags, CHANGED_COMPASS_GRID)) {
+
+        display_refresh_compass();
+    }
+
+    clear_all_flags(flags);
+}
+
 
 
 /*
@@ -26,7 +86,7 @@ void draw_line(int x0, int y0, int x1, int y1) {
     while (1) {
         // allume pixel
         if (x0 >= 0 && x0 < W_gps && y0 >= 0 && y0 < H_gps)
-            set_pixel(compass_grid, x0, y0, true);
+            set_pixel_bin_matrix(compass_grid, x0, y0, true);
 
         if (x0 == x1 && y0 == y1)
             break;
@@ -52,7 +112,7 @@ void extract_char(int x, int y, uint8_t out[8]) {
     for (int i = 0; i < 8; i++) {
         out[i] = 0;
         for (int j = 0; j < 5; j++) {
-            if (get_pixel(compass_grid, x*5 + j, y*8 + i)) {
+            if (get_pixel_bin_matrix(compass_grid, x*5 + j, y*8 + i)) {
                 out[i] |= (1 << (4 - j));
             }
         }
@@ -75,7 +135,7 @@ uint8_t calculate_compass_grid(){
     uint8_t y = CY + round((double)(ARROW_LENGTH)*dy);
 
     if(x == compass_pos.x && y == compass_pos.y) {
-        return 0; // Indique que l'aiguille n'a pas besoin d'être redessinée
+        return 0;
     }
 
     clear_inner_compass();
@@ -123,42 +183,42 @@ void display_refresh_compass() {
 
 void highlight_compass_frame() {
     
-    set_pixel(compass_grid, 0, 0, true);
-    set_pixel(compass_grid, 1, 0, true);
-    set_pixel(compass_grid, 0, 1, true);
+    set_pixel_bin_matrix(compass_grid, 0, 0, true);
+    set_pixel_bin_matrix(compass_grid, 1, 0, true);
+    set_pixel_bin_matrix(compass_grid, 0, 1, true);
 
 
-    set_pixel(compass_grid, 0, H_gps - 1, true);
-    set_pixel(compass_grid, 0, H_gps - 2, true);
-    set_pixel(compass_grid, 1, H_gps - 1, true);
+    set_pixel_bin_matrix(compass_grid, 0, H_gps - 1, true);
+    set_pixel_bin_matrix(compass_grid, 0, H_gps - 2, true);
+    set_pixel_bin_matrix(compass_grid, 1, H_gps - 1, true);
 
-    set_pixel(compass_grid, W_gps - 1, H_gps - 1, true);
-    set_pixel(compass_grid, W_gps - 1, H_gps - 2, true);
-    set_pixel(compass_grid, W_gps - 2, H_gps - 1, true);
+    set_pixel_bin_matrix(compass_grid, W_gps - 1, H_gps - 1, true);
+    set_pixel_bin_matrix(compass_grid, W_gps - 1, H_gps - 2, true);
+    set_pixel_bin_matrix(compass_grid, W_gps - 2, H_gps - 1, true);
 
-    set_pixel(compass_grid, W_gps - 1, 0, true);
-    set_pixel(compass_grid, W_gps - 1, 1, true);
-    set_pixel(compass_grid, W_gps - 2, 0, true);
+    set_pixel_bin_matrix(compass_grid, W_gps - 1, 0, true);
+    set_pixel_bin_matrix(compass_grid, W_gps - 1, 1, true);
+    set_pixel_bin_matrix(compass_grid, W_gps - 2, 0, true);
 }
 
 
 void unhighlight_compass_frame() {
-    set_pixel(compass_grid, 0, 0, false);
-    set_pixel(compass_grid, 1, 0, false);
-    set_pixel(compass_grid, 0, 1, false);
+    set_pixel_bin_matrix(compass_grid, 0, 0, false);
+    set_pixel_bin_matrix(compass_grid, 1, 0, false);
+    set_pixel_bin_matrix(compass_grid, 0, 1, false);
 
 
-    set_pixel(compass_grid, 0, H_gps - 1, false);
-    set_pixel(compass_grid, 0, H_gps - 2, false);
-    set_pixel(compass_grid, 1, H_gps - 1, false);
+    set_pixel_bin_matrix(compass_grid, 0, H_gps - 1, false);
+    set_pixel_bin_matrix(compass_grid, 0, H_gps - 2, false);
+    set_pixel_bin_matrix(compass_grid, 1, H_gps - 1, false);
 
-    set_pixel(compass_grid, W_gps - 1, H_gps - 1, false);
-    set_pixel(compass_grid, W_gps - 1, H_gps - 2, false);
-    set_pixel(compass_grid, W_gps - 2, H_gps - 1, false);
+    set_pixel_bin_matrix(compass_grid, W_gps - 1, H_gps - 1, false);
+    set_pixel_bin_matrix(compass_grid, W_gps - 1, H_gps - 2, false);
+    set_pixel_bin_matrix(compass_grid, W_gps - 2, H_gps - 1, false);
 
-    set_pixel(compass_grid, W_gps - 1, 0, false);
-    set_pixel(compass_grid, W_gps - 1, 1, false);
-    set_pixel(compass_grid, W_gps - 2, 0, false);
+    set_pixel_bin_matrix(compass_grid, W_gps - 1, 0, false);
+    set_pixel_bin_matrix(compass_grid, W_gps - 1, 1, false);
+    set_pixel_bin_matrix(compass_grid, W_gps - 2, 0, false);
 }
 
 void clear_inner_compass() {
@@ -170,7 +230,7 @@ void clear_inner_compass() {
                 (x == W_gps - 2 && (y == 0 || y == H_gps - 1))) {
                 continue; // ne pas effacer les pixels du cadre
             }
-            set_pixel(compass_grid, x, y, false);
+            set_pixel_bin_matrix(compass_grid, x, y, false);
         }
     }
 }   
