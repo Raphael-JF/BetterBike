@@ -67,11 +67,11 @@ public:
      * @brief  Reads the magnetic field data from the sensor.
      * @note   This function retrieves the latest magnetic field measurements
      *         from the sensor and stores them in the provided data structure.
-     * @param  data: A reference to a MagnetometerData structure to store the
+     * @param  data: A reference to a magnetometer_data structure to store the
      *               retrieved magnetic field data.
      * @retval True if the data was read successfully, false otherwise.
      */
-    bool readData(MagnetometerData &data) override
+    bool readData(magnetometer_data &data) override
     {
         uint8_t buffer[6] = {0};
         int16_t x = 0, y = 0, z = 0;
@@ -192,7 +192,7 @@ public:
         }
         hal->delay(20);
 
-        MagnetometerData data;
+        magnetometer_data data;
 
         if (!readData(data)) {
             log_e("Failed to read data before selfTest");

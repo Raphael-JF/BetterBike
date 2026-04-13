@@ -331,7 +331,7 @@ struct AccelerometerData {
  * Contains magnetic field values in both raw format (LSB) and processed format (Gauss),
  * as well as temperature if the sensor supports it.
  */
-struct MagnetometerData {
+struct magnetometer_data {
     SensorVector magnetic_field;  ///< magnetic field strength (Gauss)
     RawVector raw;                ///< raw data
     float temperature;            ///< temperature (°C)
@@ -340,7 +340,7 @@ struct MagnetometerData {
     bool overflow;                ///< data overflow flag
     bool skip_data;               ///< skip data flag
 
-    MagnetometerData() : magnetic_field{0, 0, 0}, raw{0, 0, 0}, temperature{0}, heading{0}, heading_degrees{0}, overflow{false}, skip_data{false} {}
+    magnetometer_data() : magnetic_field{0, 0, 0}, raw{0, 0, 0}, temperature{0}, heading{0}, heading_degrees{0}, overflow{false}, skip_data{false} {}
 };
 
 /**

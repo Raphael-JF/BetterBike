@@ -71,7 +71,7 @@ namespace MagnetometerUtils
     * @param declination Magnetic declination correction in radians (positive east)
     * @return Heading angle in radians, range [0, 2π) (0 = magnetic north)
     */
-    inline float calculateHeading(const MagnetometerData& data, float declination = 0.0f)
+    inline float calculateHeading(const magnetometer_data& data, float declination = 0.0f)
     {
         const auto& mag = data.magnetic_field;
 
@@ -112,7 +112,7 @@ namespace MagnetometerUtils
      * @param declination_deg Magnetic declination correction in degrees (positive east)
      * @return Heading angle in degrees, range [0, 360) (0 = magnetic north)
      */
-    inline float calculateHeadingDegrees(const MagnetometerData& data, float declination_deg = 0.0f)
+    inline float calculateHeadingDegrees(const magnetometer_data& data, float declination_deg = 0.0f)
     {
         const auto& mag = data.magnetic_field;
         if (mag.x == 0.0f && mag.y == 0.0f) {
@@ -140,7 +140,7 @@ namespace MagnetometerUtils
      * @param data Magnetometer data structure containing magnetic field measurements
      * @return Magnetic field strength in the same units as input (typically microtesla, μT)
      */
-    inline float calculateMagneticStrength(const MagnetometerData& data)
+    inline float calculateMagneticStrength(const magnetometer_data& data)
     {
         const auto& mag = data.magnetic_field;
 

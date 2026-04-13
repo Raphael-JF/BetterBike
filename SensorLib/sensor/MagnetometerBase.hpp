@@ -31,7 +31,7 @@
 #include "SensorBase.hpp"
 #include "MagnetometerUtils.hpp"
 
-class MagnetometerBase : public SensorBase<MagnetometerData>
+class MagnetometerBase : public SensorBase<magnetometer_data>
 {
 public:
 
@@ -57,7 +57,7 @@ public:
      *         sensor data is ready to be read.
      * @retval True if new data is available, false otherwise.
      */
-    bool readData(MagnetometerData &data) override = 0;
+    bool readData(magnetometer_data &data) override = 0;
 
     /**
      * @brief  Checks if new data is available from the magnetometer.

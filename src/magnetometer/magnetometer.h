@@ -3,17 +3,31 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include "librairies/SensorLib/SensorQMC5883P.hpp"
+#include "qmc5883p_raw.h"
 
-extern SensorQMC5883P magnetometer;
-extern MagnetometerData magnetometer_data;
-extern float magnetometer_bearing;
+
+
+struct magnetometer_data {
+    int16_t x;
+    int16_t y;
+    int16_t z;
+};
+
+struct magnetometer_compensator {
+    double x_offset;
+    double y_offset;
+    // double scale;
+};
+
+extern double magnetometer_bearing;
+extern struct magnetometer_data raw_data;
+extern struct magnetometer_compensator magnetometer_compensator;
 
 
 /*
     Initialise le magnétomètre avec les paramètres de configuration souhaités et la déclinaison magnétique locale.
 */
-void init_magnetometer();
+bool init_magnetometer();
 
 
 /*

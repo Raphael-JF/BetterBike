@@ -41,14 +41,12 @@ void setup() {
     ble.begin("VeloGPS");
 
     // initialiser le magnétomètre
-    if (!magnetometer.begin(Wire, QMC5883P_SLAVE_ADDRESS)) {
+    if (!init_magnetometer()) {
         while (1) {
             Serial.println("Failed to find QMC5883P - check your wiring!");
             delay(1000);
         }
     }
-    init_magnetometer();
-    magnetometer.setOffset(-900,-360,0); // à ajuster pour compenser les perturbations magnétiques locales (aimantation résiduelle du vélo, etc.)
     
 
     // charger la vue par défaut (inclut l'initialisation des composants, dont la boussole)
