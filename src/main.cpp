@@ -81,6 +81,10 @@ case COMPASS_VIEW:
 
 
 
+    // if the minutes changed or if the new GPS time data made them change
+    if(update_time()){
+        warn_component(Clock, CHANGED_CURRENT_TIME);
+    }
 
 
 
@@ -137,11 +141,10 @@ case GPS_VIEW:
 
     // if the minutes changed or if the new GPS time data made them change
     if(update_time()){
-        warn_component(Time, CHANGED_CURRENT_TIME);
+        warn_component(Clock, CHANGED_CURRENT_TIME);
     }
 
 
-    read_gps_data();
     break;
         
     

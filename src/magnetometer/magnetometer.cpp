@@ -50,7 +50,7 @@ uint8_t update_magnetometer_bearing() {
     if (fabs(magnetometer_bearing - magnetometer_data.heading) < 0.0001f) {
         return 0;
     }
-    // Serial.print("Time: "); Serial.print(millis());
+    // Serial.print("Clock: "); Serial.print(millis());
     // Serial.print("| X:");
     // // Affichage des données brutes du magnétomètre pour le debug (uint16_t pour éviter les problèmes d'affichage de int16_t négatifs)
     // Serial.print(magnetometer_data.raw.x, DEC);

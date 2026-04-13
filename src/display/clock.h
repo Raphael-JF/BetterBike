@@ -28,7 +28,7 @@ enum clock_flags : uint8_t {
     NUM_CLOCK_FLAGS = 1,
 };
 
-extern struct component Time;
+extern struct component Clock;
 
 
 /*

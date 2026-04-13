@@ -32,7 +32,7 @@ void time_component_on_enter() {
 }
 
 void time_component_update() {
-    flag_manager* flags = Time.flags;
+    flag_manager* flags = Clock.flags;
 
     if (is_flag_set(flags, CHANGED_CURRENT_TIME)) {
         display_refresh_time();
@@ -42,7 +42,7 @@ void time_component_update() {
 }
 
 
-struct component Time = {
+struct component Clock = {
     time_component_on_enter,
     time_component_update,
     create_flag_manager(NUM_CLOCK_FLAGS)

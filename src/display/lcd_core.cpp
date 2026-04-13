@@ -39,9 +39,9 @@ uint8_t calibration_text_update(void) {
 void calibration_text_render(void) {}
 
 
-struct component calibration_components[] = {Time, Compass};
-struct component compass_components[] = {Time, Compass};
-struct component gps_components[] = {Time, Compass};
+struct component calibration_components[] = {Clock, Compass};
+struct component compass_components[] = {Clock, Compass};
+struct component gps_components[] = {Clock, Compass};
 struct view calibration_view = {2, calibration_components};
 struct view compass_view = {2, compass_components};
 struct view gps_view = {2, gps_components};
