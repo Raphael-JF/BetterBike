@@ -1,14 +1,34 @@
+/**
+ * @file qmc5883p_raw.cpp
+ * @brief QMC5883P magnetometer driver implementation
+ */
+
 #include "qmc5883p_raw.h"
 
 #include <math.h>
 
-
+/**
+ * @brief Magnetic declination correction in radians for Bordeaux, France.
+ * @details Approximately 1° 20' = 1.348° ≈ 0.0235 radians
+ * @see https://www.magnetic-declination.com/
+ */
 //Find the magnetic declination : https://www.magnetic-declination.com/
 const double declination_rad = radians(1.0 + (20.0 / 60.0));  // Bordeaux
+
+/** @brief Pointer to the TwoWire I2C interface object */
 TwoWire *qmc5883p_wire;
 
+/** @brief Raw magnetometer sensor readings (X, Y, Z axes) */
+struct magnetometer_data raw_data;
 
 
+/**
+ * @brief Write a single register value to the QMC5883P sensor.
+ * @param[in] reg Register address to write to
+ * @param[in] value 8-bit value to write
+ * @return true if write succeeded, false if I2C error or uninitialized
+ * @note For internal use only. Requires qmc5883p_begin() to be called first.
+ */
 bool write_register( uint8_t reg, uint8_t value)
 {
     if (qmc5883p_wire == nullptr) {
@@ -21,6 +41,12 @@ bool write_register( uint8_t reg, uint8_t value)
     return qmc5883p_wire->endTransmission() == 0;
 }
 
+/**
+ * @brief Read a single register value from the QMC5883P sensor.
+ * @param[in] reg Register address to read from
+ * @return Register value (0-255) on success, -1 on I2C error or uninitialized
+ * @note For internal use only. Requires qmc5883p_begin() to be called first.
+ */
 int read_register(uint8_t reg)
 {
     if (qmc5883p_wire == nullptr) {
@@ -40,6 +66,14 @@ int read_register(uint8_t reg)
     return qmc5883p_wire->read();
 }
 
+/**
+ * @brief Read multiple register values from the QMC5883P sensor.
+ * @param[in] reg Starting register address
+ * @param[out] buffer Pointer to buffer to store read values
+ * @param[in] len Number of bytes to read
+ * @return true if read succeeded, false on I2C error or uninitialized
+ * @note For internal use only. Requires qmc5883p_begin() to be called first.
+ */
 bool read_registers( uint8_t reg, uint8_t *buffer, size_t len)
 {
     if (qmc5883p_wire == nullptr || buffer == nullptr || len == 0) {
@@ -69,6 +103,13 @@ bool read_registers( uint8_t reg, uint8_t *buffer, size_t len)
 
 }
 
+/**
+ * @brief Initialize I2C connection and verify sensor presence.
+ * @param[in] wire Pointer to TwoWire I2C interface object
+ * @param[in] address Target I2C slave address (default: QMC5883P_SLAVE_ADDRESS)
+ * @return true if sensor responds to queries, false on error
+ * @note Must be called before any other sensor operations
+ */
 bool qmc5883p_begin( TwoWire *wire, uint8_t address)
 {
     
@@ -83,6 +124,17 @@ bool qmc5883p_begin( TwoWire *wire, uint8_t address)
     return status >= 0;
 }
 
+/**
+ * @brief Configure sensor for continuous measurement operation.
+ * @details Applied configuration:
+ *   - Mode: NORMAL (continuous measurement enabled)
+ *   - Oversampling Ratio (OSR): 4x (noise reduction)
+ *   - Data Output Rate (ODR): 100 Hz
+ *   - Range: ±8 Gauss full scale
+ *   - Downsampling Ratio (DSR): 1x (no downsampling)
+ * @return true if configuration succeeded, false on I2C error
+ * @note Should be called once after qmc5883p_begin()
+ */
 bool qmc5883p_configure()
 {
     if (!write_register(REG_CMD2, 0x80)) {
@@ -102,6 +154,14 @@ bool qmc5883p_configure()
     return write_register(REG_CMD1, cmd1);
 }
 
+/**
+ * @brief Read raw sensor data from QMC5883P.
+ * @details Checks data-ready flag, reads all 6 bytes (X, Y, Z LSB/MSB), 
+ * and converts to int16_t values. Updates global raw_data structure.
+ * Overflow flag is checked but not stored (data remains valid on overflow).
+ * @return true if data was successfully read and is ready, false if not ready or I2C error
+ * @note Should be called periodically (≤10ms intervals at 100Hz ODR)
+ */
 bool qmc5883p_read_raw()
 {
 
@@ -127,9 +187,16 @@ bool qmc5883p_read_raw()
     return true;
 }
 
+/**
+ * @brief Compute magnetic heading from raw data in radians.
+ * @details Calculates bearing angle using arctangent of Y/X ratio,
+ * applies declination correction, and normalizes result to [0, 2π).
+ * @return Heading in radians: 0=North, π/2=East, π=South, 3π/2=West
+ * @note Requires raw_data with calibration offsets already applied
+ * @see qmc5883p_compute_heading_degrees() for degree output
+ */
 double qmc5883p_compute_heading_radians()
 {
-
     double heading = atan2((double)raw_data.y, (double)raw_data.x);
     heading += declination_rad;
 
@@ -140,6 +207,14 @@ double qmc5883p_compute_heading_radians()
     return heading;
 }
 
+/**
+ * @brief Compute magnetic heading from raw data in degrees.
+ * @details Calls qmc5883p_compute_heading_radians() and converts result 
+ * from radians to degrees (rad * 180 / π).
+ * @return Heading in degrees (0-360): 0=North, 90=East, 180=South, 270=West
+ * @note Requires raw_data with calibration offsets already applied
+ * @see qmc5883p_compute_heading_radians() for radian output
+ */
 double qmc5883p_compute_heading_degrees()
 {
     return qmc5883p_compute_heading_radians() * 180.0 / M_PI;

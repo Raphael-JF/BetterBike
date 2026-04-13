@@ -3,7 +3,6 @@
 #include "display/compass.h"
 
 double magnetometer_bearing = 0.0;
-struct magnetometer_data raw_data;
 struct magnetometer_compensator magnetometer_compensator;
 
 

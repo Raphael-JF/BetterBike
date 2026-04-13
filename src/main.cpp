@@ -62,7 +62,10 @@ void loop() {
     switch (current_view)
     {
 case CALIBRATION_VIEW:
-    
+    // if the minutes changed or if the new GPS time data made them change
+    if(update_time()){
+        warn_component(Clock, CHANGED_CURRENT_TIME);
+    }
     
 
 

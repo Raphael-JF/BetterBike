@@ -7,20 +7,15 @@
 
 
 
-struct magnetometer_data {
-    int16_t x;
-    int16_t y;
-    int16_t z;
-};
+
 
 struct magnetometer_compensator {
-    double x_offset;
-    double y_offset;
+    int16_t x_offset;
+    int16_t y_offset;
     // double scale;
 };
 
 extern double magnetometer_bearing;
-extern struct magnetometer_data raw_data;
 extern struct magnetometer_compensator magnetometer_compensator;
 
 
