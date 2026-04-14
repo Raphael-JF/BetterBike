@@ -19,13 +19,14 @@ bool init_magnetometer(){
 }
 
 
+uint8_t read_magnetometer_data(){
+    return qmc5883p_read_raw();
+}
+
 uint8_t update_magnetometer_bearing() {
-    if(!qmc5883p_read_raw()){
-        return 0;
-    }
     double new_bearing = qmc5883p_compute_heading_radians();
 
-    if (fabs(magnetometer_bearing - new_bearing) < 0.0001) {
+    if (fabs(magnetometer_bearing - new_bearing) < 0.05) {
         return 0;
     }
     magnetometer_bearing = new_bearing;
@@ -37,17 +38,3 @@ uint8_t update_magnetometer_bearing() {
     return 1;
 }
 
-
-uint8_t update_bearing_to_display(){
-    double new_bearing = magnetometer_bearing ; 
-    // Normaliser l'angle entre 0 et 2*PI
-    new_bearing = fmod(new_bearing, 2 * M_PI);
-    if (new_bearing < 0) {
-        new_bearing += 2 * M_PI;
-    }
-    if(fabs(new_bearing - bearing_to_display) < 0.0001){
-        return 0;
-    }
-    bearing_to_display = new_bearing;
-    return 1;
-}

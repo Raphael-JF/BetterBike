@@ -3,9 +3,6 @@
 #include <LiquidCrystal_I2C.h>
 
 #include "display/lcd_core.h"
-#include "display/compass/nav_compass.h"
-#include "display/clock.h"
-#include "gps/gps_core.h"
 
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 
@@ -13,33 +10,33 @@ enum view_idx current_view = NO_VIEW;
 struct view* active_view;
 
 
-void compass_title_on_enter(void) {
-    lcd.setCursor(6, 0);
-    lcd.print("no gps");
-}
+// void compass_title_on_enter(void) {
+//     lcd.setCursor(6, 0);
+//     lcd.print("no gps");
+// }
 
-uint8_t compass_title_update(void) {
-    return 0;
-}
+// uint8_t compass_title_update(void) {
+//     return 0;
+// }
 
-void compass_title_render(void) {}
-
-
-void calibration_text_on_enter(void) {
-    lcd.setCursor(0, 1);
-    lcd.print("            ");
-    lcd.setCursor(1, 1);
-    lcd.print("calibrating");
-}
-
-uint8_t calibration_text_update(void) {
-    return 0;
-}
-
-void calibration_text_render(void) {}
+// void compass_title_render(void) {}
 
 
-struct component calibration_components[] = {Clock, Nav_compass};
+// void calibration_text_on_enter(void) {
+//     lcd.setCursor(0, 1);
+//     lcd.print("            ");
+//     lcd.setCursor(1, 1);
+//     lcd.print("calibrating");
+// }
+
+// uint8_t calibration_text_update(void) {
+//     return 0;
+// }
+
+// void calibration_text_render(void) {}
+
+
+struct component calibration_components[] = {Clock, Cal_compass};
 struct component compass_components[] = {Clock, Nav_compass};
 struct component gps_components[] = {Clock, Nav_compass};
 struct view calibration_view = {2, calibration_components};

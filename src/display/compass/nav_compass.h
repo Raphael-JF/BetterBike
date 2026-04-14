@@ -3,7 +3,6 @@
 
 
 
-#define ARROW_LENGTH W_gps < H_gps ? W_gps/2 : H_gps/2
 
 #include "display/compass/compass_core.h"
 #include "display/lcd_core.h"
@@ -21,15 +20,17 @@
 
 
 enum nav_compass_flags : uint8_t {
-    CHANGED_MAGNETOMETER_BEARING = 0,
-    CHANGED_CURRENT_POSITION = 1,
-    CHANGED_WAYPOINT_POSITION = 2, 
-    CHANGED_WAYPOINT_BEARING = 3,
-    CHANGED_BEARING_TO_DISPLAY = 4,
-    CHANGED_COMPASS_GRID = 5,
-    DO_HIGHLIGHT_FRAME = 6,
-    DO_UNHIGHLIGHT_FRAME = 7,
-    NUM_NAV_COMPASS_FLAGS = 8
+    NAV_CHANGED_MAGNETOMETER_RAW_DATA = 0,
+    NAV_CHANGED_MAGNETOMETER_BEARING = 1,
+    NAV_CHANGED_CURRENT_POSITION = 2,
+    NAV_CHANGED_WAYPOINT_POSITION = 3, 
+    NAV_CHANGED_WAYPOINT_BEARING = 4,
+    NAV_CHANGED_BEARING_TO_DISPLAY = 5,
+    NAV_CHANGED_COMPASS_GRID = 6,
+    NAV_DO_HIGHLIGHT_FRAME = 7,
+    NAV_DO_UNHIGHLIGHT_FRAME = 8,
+    NAV_CHANGED_NEEDLE_POSITION = 9,
+    NUM_NAV_COMPASS_FLAGS = 10
 };
 
 enum gps_timeout_status_transition : uint8_t {
@@ -46,7 +47,7 @@ extern struct component Nav_compass;
 
 
 void nav_compass_component_on_enter();
-void nav_compass_component_update();
+void nav_compass_update();
 
 
 
@@ -60,8 +61,13 @@ enum gps_timeout_status_transition update_gps_timeout_status();
  * @brief Recompute the compass needle in `compass_grid` when heading changed enough.
  * @return Non-zero if the grid changed and must be redrawn, 0 otherwise.
  */
-uint8_t calculate_nav_compass_grid();
+void compass_grid_draw_needle();
 
+
+/*
+    Met à jour bearing_to_display en radians pour pointer du current_position vers waypoint_position, en utilisant magnetometer_bearing pour calculer l'angle de l'aiguille de la boussole. Normalise l'angle entre 0 et 2*PI. Retourne 1 si bearing_to_display a été changé, 0 sinon
+*/
+uint8_t nav_update_bearing_to_display();
 
 
 

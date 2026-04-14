@@ -4,6 +4,12 @@
 #include <stdint.h>
 #include <LiquidCrystal_I2C.h>
 
+#include "display/lcd_core.h"
+#include "display/compass/nav_compass.h"
+#include "display/compass/cal_compass.h"
+#include "display/clock.h"
+#include "gps/gps_core.h"
+
 struct view {
     uint8_t num_components;
     struct component* components;

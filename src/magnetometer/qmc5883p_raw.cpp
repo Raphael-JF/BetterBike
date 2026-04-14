@@ -180,9 +180,17 @@ bool qmc5883p_read_raw()
         return false;
     }
 
+
+    uint16_t raw_x_before = raw_data.x;
+    uint16_t raw_y_before = raw_data.y;
+    uint16_t raw_z_before = raw_data.z;
     raw_data.x = (int16_t)(((uint16_t)buffer[1] << 8) | buffer[0]);
     raw_data.y = (int16_t)(((uint16_t)buffer[3] << 8) | buffer[2]);
     raw_data.z = (int16_t)(((uint16_t)buffer[5] << 8) | buffer[4]);
+
+    if(fabs(raw_data.x - raw_x_before) < 10 && abs(raw_data.y - raw_y_before) < 10){
+        return false;
+    }
 
     return true;
 }

@@ -1,8 +1,8 @@
 #include "compass_core.h"
 
 
-struct compass_needle_pos compass_pos = {2*H_gps, 2*W_gps};
-struct bin_matrix* compass_grid = create_bin_matrix(W_gps, H_gps);
+struct compass_needle_pos needle_pos = {2*H_COMPASS, 2*W_COMPASS};
+struct bin_matrix* compass_grid = create_bin_matrix(W_COMPASS, H_COMPASS);
 double bearing_to_display = 0.0;
 
 
@@ -46,17 +46,17 @@ void highlight_compass_frame() {
     set_pixel_bin_matrix(compass_grid, 0, 1, true);
 
 
-    set_pixel_bin_matrix(compass_grid, 0, H_gps - 1, true);
-    set_pixel_bin_matrix(compass_grid, 0, H_gps - 2, true);
-    set_pixel_bin_matrix(compass_grid, 1, H_gps - 1, true);
+    set_pixel_bin_matrix(compass_grid, 0, H_COMPASS - 1, true);
+    set_pixel_bin_matrix(compass_grid, 0, H_COMPASS - 2, true);
+    set_pixel_bin_matrix(compass_grid, 1, H_COMPASS - 1, true);
 
-    set_pixel_bin_matrix(compass_grid, W_gps - 1, H_gps - 1, true);
-    set_pixel_bin_matrix(compass_grid, W_gps - 1, H_gps - 2, true);
-    set_pixel_bin_matrix(compass_grid, W_gps - 2, H_gps - 1, true);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 1, H_COMPASS - 1, true);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 1, H_COMPASS - 2, true);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 2, H_COMPASS - 1, true);
 
-    set_pixel_bin_matrix(compass_grid, W_gps - 1, 0, true);
-    set_pixel_bin_matrix(compass_grid, W_gps - 1, 1, true);
-    set_pixel_bin_matrix(compass_grid, W_gps - 2, 0, true);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 1, 0, true);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 1, 1, true);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 2, 0, true);
 }
 
 
@@ -66,26 +66,26 @@ void unhighlight_compass_frame() {
     set_pixel_bin_matrix(compass_grid, 0, 1, false);
 
 
-    set_pixel_bin_matrix(compass_grid, 0, H_gps - 1, false);
-    set_pixel_bin_matrix(compass_grid, 0, H_gps - 2, false);
-    set_pixel_bin_matrix(compass_grid, 1, H_gps - 1, false);
+    set_pixel_bin_matrix(compass_grid, 0, H_COMPASS - 1, false);
+    set_pixel_bin_matrix(compass_grid, 0, H_COMPASS - 2, false);
+    set_pixel_bin_matrix(compass_grid, 1, H_COMPASS - 1, false);
 
-    set_pixel_bin_matrix(compass_grid, W_gps - 1, H_gps - 1, false);
-    set_pixel_bin_matrix(compass_grid, W_gps - 1, H_gps - 2, false);
-    set_pixel_bin_matrix(compass_grid, W_gps - 2, H_gps - 1, false);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 1, H_COMPASS - 1, false);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 1, H_COMPASS - 2, false);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 2, H_COMPASS - 1, false);
 
-    set_pixel_bin_matrix(compass_grid, W_gps - 1, 0, false);
-    set_pixel_bin_matrix(compass_grid, W_gps - 1, 1, false);
-    set_pixel_bin_matrix(compass_grid, W_gps - 2, 0, false);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 1, 0, false);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 1, 1, false);
+    set_pixel_bin_matrix(compass_grid, W_COMPASS - 2, 0, false);
 }
 
-void clear_inner_compass() {
-    for (int y = 0; y < H_gps; y++) {
-        for (int x = 0; x < W_gps; x++) {
-            if ((x == 0 && (y == 0 || y == 1 || y == H_gps - 1 || y == H_gps - 2)) ||
-                (x == 1 && (y == 0 || y == H_gps - 1)) ||
-                (x == W_gps - 1 && (y == 0 || y == 1 || y == H_gps - 1 || y == H_gps - 2)) ||
-                (x == W_gps - 2 && (y == 0 || y == H_gps - 1))) {
+void clear_inner_compass_grid() {
+    for (int y = 0; y < H_COMPASS; y++) {
+        for (int x = 0; x < W_COMPASS; x++) {
+            if ((x == 0 && (y == 0 || y == 1 || y == H_COMPASS - 1 || y == H_COMPASS - 2)) ||
+                (x == 1 && (y == 0 || y == H_COMPASS - 1)) ||
+                (x == W_COMPASS - 1 && (y == 0 || y == 1 || y == H_COMPASS - 1 || y == H_COMPASS - 2)) ||
+                (x == W_COMPASS - 2 && (y == 0 || y == H_COMPASS - 1))) {
                 continue; // ne pas effacer les pixels du cadre
             }
             set_pixel_bin_matrix(compass_grid, x, y, false);
@@ -94,9 +94,90 @@ void clear_inner_compass() {
 }   
 
 void clear_whole_compass(){
-      for (int y = 0; y < H_gps; y++) {
-        for (int x = 0; x < W_gps; x++) {
+      for (int y = 0; y < H_COMPASS; y++) {
+        for (int x = 0; x < W_COMPASS; x++) {
             set_pixel_bin_matrix(compass_grid, x, y, false);
         }
     }
 }   
+
+
+
+/**
+ * @brief Bresenham's line algorithm to draw a line between two points in `compass_grid`.
+ * The points must be within the bounds of the grid.
+ * @param x0 Starting point x coordinate (in pixels)
+ * @param y0 Starting point y coordinate (in pixels)
+ * @param x1 Ending point x coordinate (in pixels)
+ * @param y1 Ending point y coordinate (in pixels)
+ */
+void draw_line(int x0, int y0, int x1, int y1){
+    int dx = fabs(x1 - x0);
+    int dy = fabs(y1 - y0);
+
+    int sx = (x0 < x1) ? 1 : -1;
+    int sy = (y0 < y1) ? 1 : -1;
+
+    int err = dx - dy;
+
+    while (1) {
+        // allume pixel
+        if (x0 >= 0 && x0 < W_COMPASS && y0 >= 0 && y0 < H_COMPASS)
+            set_pixel_bin_matrix(compass_grid, x0, y0, true);
+
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        int e2 = 2 * err;
+
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+
+
+
+
+uint8_t update_needle_position() {
+
+    double dx = cos(bearing_to_display);
+    double dy = -sin(bearing_to_display);
+
+
+    uint8_t x = CX + round((double)(NEEDLE_LENGTH)*dx);
+    uint8_t y = CY + round((double)(NEEDLE_LENGTH)*dy);
+    if(x == needle_pos.x && y == needle_pos.y) {
+        return 0;
+    }
+    needle_pos.x = x;
+    needle_pos.y = y;
+
+    return 1;
+}
+
+void compass_grid_draw_needle(){
+    int cx = (int)CX;
+    int cy = (int)CY;
+
+    if(bearing_to_display < M_PI / 2) {
+        draw_line(cx, cy - 1, needle_pos.x, needle_pos.y - 1);
+    }
+    else if(bearing_to_display < M_PI) {
+        draw_line(cx - 1, cy - 1, needle_pos.x - 1, needle_pos.y - 1);
+
+    }
+    else if(bearing_to_display < 3*M_PI/2) {
+        draw_line(cx - 1, cy, needle_pos.x - 1, needle_pos.y);
+    }
+    else{
+        draw_line(cx, cy, needle_pos.x, needle_pos.y);
+    }
+}

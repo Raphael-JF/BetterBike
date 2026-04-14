@@ -10,8 +10,8 @@ TinyGPSPlus gps;
 HardwareSerial gpsSerial(1);
 
 
-struct position waypoint_position = {48.877234, 2.320267}; // école
-struct position current_position = {0.0, 0.0};
+struct gps_position waypoint_position = {48.877234, 2.320267}; // école
+struct gps_position current_position = {0.0, 0.0};
 double waypoint_bearing = 0.0; // en radians, angle entre le nord et la ligne current_position -> waypoint_position, dans le sens des aiguilles d'une montre
 unsigned long last_gps_sync_millis = 0;
 enum gps_timeout_status timeout_status = GPS_TIMEOUT_STATUS_INVALID;

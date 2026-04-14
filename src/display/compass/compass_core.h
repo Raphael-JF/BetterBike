@@ -8,20 +8,28 @@
 #include "display/lcd_core.h"
 
 
-#define W_gps 15
-#define H_gps 16
+#define W_COMPASS 15
+#define H_COMPASS 16
 
-#define CX W_gps / 2.0
-#define CY H_gps / 2.0
+#define NEEDLE_LENGTH ((W_COMPASS < H_COMPASS) ? (W_COMPASS / 2.0) : (H_COMPASS / 2.0))
+
+
+#define CX (W_COMPASS / 2.0)
+#define CY (H_COMPASS / 2.0)
 
 struct compass_needle_pos {
     uint8_t x;
     uint8_t y;
 };
 
-extern struct compass_needle_pos compass_pos;
+
+extern struct compass_needle_pos needle_pos;
 extern struct bin_matrix* compass_grid;
 extern double bearing_to_display;
+
+
+
+
 
 /**
  * @brief Push current `compass_grid` pixels to LCD custom characters.
@@ -41,12 +49,28 @@ void unhighlight_compass_frame();
 /**
  * @brief Clear compass interior pixels while preserving the frame pixels.
  */
-void clear_inner_compass();
+void clear_inner_compass_grid();
 
 /**
  * @brief Clear the whole compass grid, including frame pixels.
  */
 void clear_whole_compass();
+
+
+/**
+ * @brief Update the position of the compass needle based on the current bearing.
+ */
+uint8_t update_needle_position() ;
+
+/**
+ * @brief Draw a line on the compass grid from the center to the needle position.
+ * Uses Bresenham's line algorithm.
+ * @param x0 Starting point x coordinate (in pixels)
+ * @param y0 Starting point y coordinate (in pixels)
+ * @param x1 Ending point x coordinate (in pixels)
+ * @param y1 Ending point y coordinate (in pixels)
+ */
+void compass_grid_draw_needle();
 
 
 

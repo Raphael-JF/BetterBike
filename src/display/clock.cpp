@@ -31,7 +31,7 @@ void time_component_on_enter() {
     lcd.print("--:--");
 }
 
-void time_component_update() {
+void time_update() {
     flag_manager* flags = Clock.flags;
 
     if (is_flag_set(flags, CHANGED_CURRENT_TIME)) {
@@ -44,7 +44,7 @@ void time_component_update() {
 
 struct component Clock = {
     time_component_on_enter,
-    time_component_update,
+    time_update,
     create_flag_manager(NUM_CLOCK_FLAGS)
 };
 
