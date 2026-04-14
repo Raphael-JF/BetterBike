@@ -62,7 +62,7 @@ void setup() {
 
 void loop() {
 
-    switch (current_view)
+    switch (active_view_idx)
     {
 case CALIBRATION_VIEW:
     // if the minutes changed or if the new GPS time data made them change

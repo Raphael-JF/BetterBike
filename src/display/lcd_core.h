@@ -8,6 +8,8 @@
 #include "display/compass/nav_compass.h"
 #include "display/compass/cal_compass.h"
 #include "display/clock.h"
+#include "display/text/text1.h"
+
 #include "gps/gps_core.h"
 
 struct view {
@@ -22,7 +24,7 @@ enum view_idx : uint8_t{
     COMPASS_VIEW = 3
 };
 extern LiquidCrystal_I2C lcd;
-extern enum view_idx current_view;
+extern enum view_idx active_view_idx;
 extern struct view* active_view;
 
 extern struct view calibration_view;

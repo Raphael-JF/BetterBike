@@ -6,7 +6,7 @@
 
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 
-enum view_idx current_view = NO_VIEW;
+enum view_idx active_view_idx = NO_VIEW;
 struct view* active_view;
 
 
@@ -36,10 +36,15 @@ struct view* active_view;
 // void calibration_text_render(void) {}
 
 
-struct component calibration_components[] = {Clock, Cal_compass};
+struct component calibration_components[] = {
+    Clock, 
+    Cal_compass,
+    Text1 // to display the percentage of completion of the calibration
+};
 struct component compass_components[] = {Clock, Nav_compass};
 struct component gps_components[] = {Clock, Nav_compass};
-struct view calibration_view = {2, calibration_components};
+
+struct view calibration_view = {3, calibration_components};
 struct view compass_view = {2, compass_components};
 struct view gps_view = {2, gps_components};
 struct view empty_view = {0, nullptr};
@@ -66,13 +71,33 @@ void lcd_load_view(enum view_idx view) {
     for (uint8_t i = 0; i < active_view->num_components; i++) {
         active_view->components[i].onEnter();
     }
+    switch (active_view_idx){
+        case CALIBRATION_VIEW:
+            break;
+        case COMPASS_VIEW:
+            break;
+        case GPS_VIEW:
+            break;
+        default:
+            break;
+    }
 
-    current_view = view;
+    active_view_idx = view;
 }
 
 void lcd_update_current_view(void) {
     for (uint8_t i = 0; i < active_view->num_components; i++) {
         active_view->components[i].update();
+    }
+    switch (active_view_idx){
+        case CALIBRATION_VIEW:
+            break;
+        case COMPASS_VIEW:
+            break;
+        case GPS_VIEW:
+            break;
+        default:
+            break;
     }
 }
 
