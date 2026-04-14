@@ -29,19 +29,19 @@ struct blinking blinking_create(uint16_t period, uint8_t initial_blink_state) ;
 /*
     Updates the blinking state based on the elapsed time. Should be called regularly (e.g. in the main loop) for each blinking structure.
 */
-enum blinking_response blinking_update(struct blinking b) ;
+enum blinking_response blinking_update(struct blinking *b) ;
 
 
 /*
     Arrête le clignotement du blinking d'indice donné.
 */
-void blinking_stop(struct blinking b);
+void blinking_stop(struct blinking *b);
 
 
 /*
     Démarre le clignotement du blinking d'indice donné.
 */
-void blinking_start(struct blinking b);
+void blinking_start(struct blinking *b);
 
 
 

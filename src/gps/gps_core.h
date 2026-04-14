@@ -4,6 +4,9 @@
 #include <TinyGPS++.h>
 #include <HardwareSerial.h>
 
+#include "utils/flag_manager.h"
+#include "display/clock.h"
+
 
 
 #define GPS_TIMEOUT_OLD 5000 // en ms, durée après laquelle on considère que les données GPS sont vieilles (mais pas encore invalides) si pas de nouvelle donnée reçue

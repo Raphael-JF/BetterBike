@@ -1,6 +1,5 @@
 #include "magnetometer.h"
-#include "gps/gps_core.h"
-#include "display/compass.h"
+
 
 double magnetometer_bearing = 0.0;
 struct magnetometer_compensator magnetometer_compensator;
@@ -30,11 +29,11 @@ uint8_t update_magnetometer_bearing() {
         return 0;
     }
     magnetometer_bearing = new_bearing;
-    Serial.print("Time: "); Serial.print(millis()/1000U, DEC);
-    Serial.print("| X:");
-    Serial.print(raw_data.x, DEC);
-    Serial.print("| Y:");
-    Serial.println(raw_data.y, DEC);
+    // Serial.print("Time: "); Serial.print(millis()/1000U, DEC);
+    // Serial.print("| X:");
+    // Serial.print(raw_data.x, DEC);
+    // Serial.print("| Y:");
+    // Serial.println(raw_data.y, DEC);
     return 1;
 }
 

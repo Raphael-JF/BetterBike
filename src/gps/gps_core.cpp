@@ -4,11 +4,6 @@
 
 
 #include "gps_core.h"
-#include "display/lcd_core.h"
-#include "display/compass.h"
-#include "display/clock.h"
-#include "utils/blinking.h"
-#include "utils/flag_manager.h"
 
 
 TinyGPSPlus gps;

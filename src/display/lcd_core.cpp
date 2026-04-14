@@ -3,7 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 
 #include "display/lcd_core.h"
-#include "display/compass.h"
+#include "display/compass/nav_compass.h"
 #include "display/clock.h"
 #include "gps/gps_core.h"
 
@@ -39,9 +39,9 @@ uint8_t calibration_text_update(void) {
 void calibration_text_render(void) {}
 
 
-struct component calibration_components[] = {Clock, Compass};
-struct component compass_components[] = {Clock, Compass};
-struct component gps_components[] = {Clock, Compass};
+struct component calibration_components[] = {Clock, Nav_compass};
+struct component compass_components[] = {Clock, Nav_compass};
+struct component gps_components[] = {Clock, Nav_compass};
 struct view calibration_view = {2, calibration_components};
 struct view compass_view = {2, compass_components};
 struct view gps_view = {2, gps_components};
