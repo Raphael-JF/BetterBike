@@ -1,7 +1,7 @@
 #ifndef FLAG_MANAGER_H
 #define FLAG_MANAGER_H
 
-#include "utils/binary_matrix.h"
+#include "utils/bin_matrix.h"
 
 struct flag_manager {
     /** @brief Binary matrix storing flag states (0/1). */

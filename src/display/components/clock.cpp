@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "display/lcd_core.h"
-#include "display/clock.h"
+#include "display/components/clock.h"
 #include "utils/time.h"
 
 // Base temporelle actuellement affichée à l'écran (en UTC)

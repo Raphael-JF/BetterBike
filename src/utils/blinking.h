@@ -15,8 +15,8 @@ struct blinking {
 
 enum blinking_response : uint8_t {
     BLINKING_NO_CHANGE = 0,
-    BLINKING_STATE_OFF = 1, // blink_state changed to 0
-    BLINKING_STATE_ON = 2, // blink_state changed to 1
+    BLINKING_SWITCHED_OFF = 1, // blink_state changed to 0
+    BLINKING_SWITCHED_ON = 2, // blink_state changed to 1
 };
 
 

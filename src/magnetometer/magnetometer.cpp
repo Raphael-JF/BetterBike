@@ -1,4 +1,4 @@
-#include "magnetometer.h"
+#include "magnetometer/magnetometer.h"
 
 
 double magnetometer_bearing = 0.0;

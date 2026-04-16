@@ -6,7 +6,7 @@
 
 
 
-blinking compass_frame_blinking = blinking_create(500, 0) ;
+blinking gps_compass_frame_blinking = blinking_create(500, 0) ;
 
 
 struct component Nav_compass = {
@@ -30,7 +30,7 @@ void nav_compass_component_on_enter() {
     update_current_position();
     update_waypoint_bearing();
     update_magnetometer_bearing();
-    nav_update_bearing_to_display();
+    nav_update_needle_bearing();
     update_needle_position();
     compass_grid_draw_needle();
     display_refresh_compass();
@@ -51,12 +51,12 @@ void nav_compass_update() {
     }
 
     if (is_flag_set(flags, NAV_CHANGED_WAYPOINT_BEARING) || is_flag_set(flags, NAV_CHANGED_MAGNETOMETER_BEARING)){
-        if(nav_update_bearing_to_display()){
-            set_flag(flags, NAV_CHANGED_BEARING_TO_DISPLAY);
+        if(nav_update_needle_bearing()){
+            set_flag(flags, NAV_CHANGED_needle_bearing);
         }
     }
 
-    if (is_flag_set(flags, NAV_CHANGED_BEARING_TO_DISPLAY)){
+    if (is_flag_set(flags, NAV_CHANGED_needle_bearing)){
         if(update_needle_position()){
             set_flag(flags, NAV_CHANGED_NEEDLE_POSITION);
         }
@@ -122,16 +122,16 @@ enum gps_timeout_status_transition update_gps_timeout_status() {
 
 
 
-uint8_t nav_update_bearing_to_display(){
+uint8_t nav_update_needle_bearing(){
     double new_bearing = waypoint_bearing - magnetometer_bearing ; 
     // Normaliser l'angle entre 0 et 2*PI
     new_bearing = fmod(new_bearing, 2 * M_PI);
     if (new_bearing < 0) {
         new_bearing += 2 * M_PI;
     }
-    if(fabs(new_bearing - bearing_to_display) < 0.05){
+    if(fabs(new_bearing - needle_bearing) < 0.05){
         return 0;
     }
-    bearing_to_display = new_bearing;
+    needle_bearing = new_bearing;
     return 1;
 }

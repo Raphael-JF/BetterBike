@@ -1,11 +1,12 @@
-#ifndef CAL_COMPASS_H
-#define CAL_COMPASS_H
+#ifndef CAL_VIEW_H
+#define CAL_VIEW_H
 
-#include "stdlib.h"
-#include "math.h"
+#include <stdlib.h>
+#include <math.h>
 
 
-#include "display/compass/compass_core.h"
+#include "display/components/compass.h"
+#include "display/lcd_core.h"
 
 #include "utils/flag_manager.h"
 #include "utils/component.h"
@@ -20,21 +21,25 @@
 enum cal_compass_flags : uint8_t {
     CAL_CHANGED_MAGNETOMETER_RAW_DATA = 0,
     CAL_CHANGED_MAGNETOMETER_BEARING = 1,
-    CAL_CHANGED_BEARING_TO_DISPLAY = 2,
+    CAL_CHANGED_needle_bearing = 2,
     CAL_CHANGED_PORTIONS = 3,
     CAL_CHANGED_NEEDLE_POSITION = 4,
     CAL_CHANGED_COMPASS_GRID = 5,
     NUM_CAL_COMPASS_FLAGS = 6,
 };
 
-
+extern struct flag_manager* cal_compass_flags;
 extern struct component Cal_compass;
 
-void cal_compass_on_enter();
+void enter_cal_view();
+void update_cal_view();
+
+
 void cal_compass_update();
 
 void compass_grid_draw_portions();
-uint8_t cal_update_bearing_to_display();
+uint8_t cal_update_needle_bearing();
+uint8_t bearing_to_portion_index();
 
 
-#endif // CAL_COMPASS_H
+#endif // CAL_VIEW_H

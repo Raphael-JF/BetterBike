@@ -5,7 +5,7 @@
 #include <HardwareSerial.h>
 
 #include "utils/flag_manager.h"
-#include "display/clock.h"
+#include "display/components/clock.h"
 
 
 
@@ -51,7 +51,7 @@ void update_current_position();
 
 
 /*
-    Met à jour bearing_to_display en radians pour pointer du current_position vers waypoint_position.
+    Met à jour needle_bearing en radians pour pointer du current_position vers waypoint_position.
     Renvoie 1 si la valeur du bearing a changé, 0 sinon.
 */
 uint8_t update_waypoint_bearing();

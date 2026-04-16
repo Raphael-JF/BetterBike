@@ -1,11 +1,14 @@
-#ifndef COMPASS_CORE_H
-#define COMPASS_CORE_H
+#ifndef COMPASS_H
+#define COMPASS_H
 
-#include <stdint.h>
 
-#include "utils/binary_matrix.h"
+#include <stdlib.h>
 
 #include "display/lcd_core.h"
+
+#include "utils/component.h"
+#include "utils/flag_manager.h"
+#include "utils/bin_matrix.h"
 
 
 #define W_COMPASS 15
@@ -13,9 +16,9 @@
 
 #define NEEDLE_LENGTH ((W_COMPASS < H_COMPASS) ? (W_COMPASS / 2.0) : (H_COMPASS / 2.0))
 
-
 #define CX (W_COMPASS / 2.0)
 #define CY (H_COMPASS / 2.0)
+
 
 struct compass_needle_pos {
     uint8_t x;
@@ -23,9 +26,19 @@ struct compass_needle_pos {
 };
 
 
+extern struct component Compass;
 extern struct compass_needle_pos needle_pos;
 extern struct bin_matrix* compass_grid;
-extern double bearing_to_display;
+extern double needle_bearing;
+
+
+
+/**
+ * @brief Writes the first 6 caracters of the lcd memory and clears the compass grid.
+ */
+void compass_on_enter();
+
+
 
 
 
@@ -73,5 +86,4 @@ uint8_t update_needle_position() ;
 void compass_grid_draw_needle();
 
 
-
-#endif // COMPASS_CORE_H
+#endif // COMPASS_H

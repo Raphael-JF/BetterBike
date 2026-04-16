@@ -7,7 +7,6 @@
 
 
 #include "gps/gps_core.h"
-#include "display/compass/compass_core.h"
 
 
 

@@ -9,7 +9,7 @@
 
 #include "gps/gps_core.h"
 
-#include "utils/binary_matrix.h"
+#include "utils/bin_matrix.h"
 #include "utils/blinking.h"
 #include "utils/flag_manager.h"
 #include "utils/component.h"
@@ -25,7 +25,7 @@ enum nav_compass_flags : uint8_t {
     NAV_CHANGED_CURRENT_POSITION = 2,
     NAV_CHANGED_WAYPOINT_POSITION = 3, 
     NAV_CHANGED_WAYPOINT_BEARING = 4,
-    NAV_CHANGED_BEARING_TO_DISPLAY = 5,
+    NAV_CHANGED_needle_bearing = 5,
     NAV_CHANGED_COMPASS_GRID = 6,
     NAV_DO_HIGHLIGHT_FRAME = 7,
     NAV_DO_UNHIGHLIGHT_FRAME = 8,
@@ -41,7 +41,7 @@ enum gps_timeout_status_transition : uint8_t {
     INVALID_TO_OK = 4
 };
 
-extern blinking compass_frame_blinking;
+extern blinking gps_compass_frame_blinking;
 
 extern struct component Nav_compass;
 
@@ -65,9 +65,9 @@ void compass_grid_draw_needle();
 
 
 /*
-    Met à jour bearing_to_display en radians pour pointer du current_position vers waypoint_position, en utilisant magnetometer_bearing pour calculer l'angle de l'aiguille de la boussole. Normalise l'angle entre 0 et 2*PI. Retourne 1 si bearing_to_display a été changé, 0 sinon
+    Met à jour needle_bearing en radians pour pointer du current_position vers waypoint_position, en utilisant magnetometer_bearing pour calculer l'angle de l'aiguille de la boussole. Normalise l'angle entre 0 et 2*PI. Retourne 1 si needle_bearing a été changé, 0 sinon
 */
-uint8_t nav_update_bearing_to_display();
+uint8_t nav_update_needle_bearing();
 
 
 

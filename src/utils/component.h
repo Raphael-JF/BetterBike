@@ -4,7 +4,7 @@
 #include "utils/flag_manager.h"
 
 struct component {
-    void (*onEnter)(void);
+    void (*on_enter)(void);
     void (*update)(void);
     struct flag_manager* flags;
 };

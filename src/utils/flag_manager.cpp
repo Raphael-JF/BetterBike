@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <Arduino.h>
 
-#include "utils/binary_matrix.h"
 #include "utils/flag_manager.h"
 
 

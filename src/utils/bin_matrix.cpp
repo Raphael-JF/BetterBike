@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "binary_matrix.h"
+#include "bin_matrix.h"
 
 struct bin_matrix* create_bin_matrix(unsigned int width, unsigned int height){
     struct bin_matrix* matrix = (struct bin_matrix*)malloc(sizeof(struct bin_matrix));

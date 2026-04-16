@@ -1,5 +1,7 @@
-#include "cal_compass.h"
+#include "display/views/cal_view.h"
 
+
+struct flag_manager* cal_compass_flags = create_flag_manager(NUM_CAL_COMPASS_FLAGS);
 
 struct compass_needle_pos calibration_circle_positions[NUM_PIXELS_CALIBRATION_CIRCLE];
 
@@ -8,38 +10,21 @@ struct compass_needle_pos* compass_portions[NUM_COMPASS_PORTIONS][NUM_PIXELS_CAL
 uint8_t compass_portions_sizes[NUM_COMPASS_PORTIONS] = {0};
 uint8_t calibration_points_left[NUM_COMPASS_PORTIONS] = {0};
 
-static uint8_t bearing_to_portion_index(double bearing) {
-    double normalized = fmod(bearing, 2.0 * M_PI);
-    if (normalized < 0.0) {
-        normalized += 2.0 * M_PI;
-    }
-
-    int idx = (int)(normalized * NUM_COMPASS_PORTIONS / (2.0 * M_PI));
-    if (idx >= NUM_COMPASS_PORTIONS) {
-        idx = NUM_COMPASS_PORTIONS - 1;
-    }
-    return (uint8_t)idx;
-}
 
 
-struct component Cal_compass = {
-    cal_compass_on_enter,
-    cal_compass_update,
-    create_flag_manager(NUM_CAL_COMPASS_FLAGS)
-};
+
+void enter_cal_view() {
+    Compass.update = cal_compass_update;
+    Compass.flags = cal_compass_flags; //this attributes 'flags' is used in the warn function
 
 
-void cal_compass_on_enter() {
-    lcd.setCursor(13, 0);
-    lcd.write(byte(0));
-    lcd.write(byte(1));
-    lcd.write(byte(2));
-    lcd.setCursor(13, 1);
-    lcd.write(byte(3));
-    lcd.write(byte(4));
-    lcd.write(byte(5));
+    Compass.on_enter();
+    Clock.on_enter(); // just print --:-- at the beginning
+    active_view_idx = CALIBRATION_VIEW;
 
 
+    // reset the min and max values for the magnetometer calibration
+    magnetometer_calibrate_reset();
     // Initialize calibration circle positions to (0,0)
     for(uint8_t i = 0; i < NUM_PIXELS_CALIBRATION_CIRCLE; i++){
         calibration_circle_positions[i].x = 0;
@@ -80,13 +65,15 @@ void cal_compass_on_enter() {
         }
 
     }
-    clear_whole_compass();
-    compass_grid_draw_portions();
-    display_refresh_compass();
+}
+
+void update_cal_view(){
+    Compass.update();
+    Clock.update();
 }
 
 void cal_compass_update() {
-    struct flag_manager* flags = Cal_compass.flags;
+    struct flag_manager* flags = Compass.flags;
     if(is_flag_set(flags, CAL_CHANGED_MAGNETOMETER_RAW_DATA)){
         magnetometer_calibrate_aquire();
     }
@@ -95,19 +82,19 @@ void cal_compass_update() {
     }
 
     if (is_flag_set(flags, CAL_CHANGED_MAGNETOMETER_BEARING)) {
-        if (cal_update_bearing_to_display()) {
-            set_flag(flags, CAL_CHANGED_BEARING_TO_DISPLAY);
+        if (cal_update_needle_bearing()) {
+            set_flag(flags, CAL_CHANGED_needle_bearing);
         }
     }
 
-    if (is_flag_set(flags, CAL_CHANGED_BEARING_TO_DISPLAY)){
+    if (is_flag_set(flags, CAL_CHANGED_needle_bearing)){
         if(update_needle_position()){
             set_flag(flags, CAL_CHANGED_NEEDLE_POSITION);
         }
     }
 
     if (is_flag_set(flags, CAL_CHANGED_MAGNETOMETER_RAW_DATA)) {
-        uint8_t i = bearing_to_portion_index(bearing_to_display);
+        uint8_t i = bearing_to_portion_index();
         if(calibration_points_left[i] != 0){
             calibration_points_left[i]--;
             set_flag(flags, CAL_CHANGED_PORTIONS);
@@ -141,7 +128,15 @@ void compass_grid_draw_portions(){
     }
 }
 
-uint8_t cal_update_bearing_to_display(){
-    bearing_to_display = magnetometer_bearing;
+uint8_t cal_update_needle_bearing(){
+    needle_bearing = M_PI_2 - magnetometer_bearing;
     return 1;
+}
+
+uint8_t bearing_to_portion_index() {
+    int idx = (int)(magnetometer_bearing * NUM_COMPASS_PORTIONS / (2.0 * M_PI));
+    if (idx >= NUM_COMPASS_PORTIONS) {
+        idx = NUM_COMPASS_PORTIONS - 1;
+    }
+    return (uint8_t)idx;
 }

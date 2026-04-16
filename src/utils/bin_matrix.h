@@ -1,5 +1,5 @@
-#ifndef BINARY_MATRIX_H
-#define BINARY_MATRIX_H
+#ifndef BIN_MATRIX_H
+#define BIN_MATRIX_H
 #include <stdint.h>
 
 
@@ -15,4 +15,4 @@ void set_pixel_bin_matrix(struct bin_matrix* matrix, unsigned int x, unsigned in
 uint8_t get_pixel_bin_matrix(struct bin_matrix* matrix, unsigned int x, unsigned int y);
 void fill_matrix(struct bin_matrix* matrix, uint8_t value);
 
-#endif // BINARY_MATRIX_H
+#endif // BIN_MATRIX_H

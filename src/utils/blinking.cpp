@@ -44,12 +44,12 @@ enum blinking_response blinking_update(struct blinking *b) {
         if ((toggles & 1UL) != 0UL) {
             b->blink_state = !b->blink_state;
             b->last_toggle_millis += toggles * b->period;
-            return b->blink_state ? BLINKING_STATE_ON : BLINKING_STATE_OFF;
+            return b->blink_state ? BLINKING_SWITCHED_ON : BLINKING_SWITCHED_OFF;
         }
         b->last_toggle_millis += toggles * b->period;
     } else if (b->just_started) {
         b->just_started = 0;
-        return b->blink_state ? BLINKING_STATE_ON : BLINKING_STATE_OFF;
+        return b->blink_state ? BLINKING_SWITCHED_ON : BLINKING_SWITCHED_OFF;
     }
     return BLINKING_NO_CHANGE;
 }
