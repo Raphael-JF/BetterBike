@@ -18,6 +18,7 @@ uint16_t num_calibration_points_done = 0;
 
 
 void enter_cal_view() {
+    lcd.clear();
     Compass.update = cal_compass_update;
     Compass.flags = cal_compass_flags; //this attributes 'flags' is used in the warn function
     change_text_message(calibration_text_ptr, (char *)"Calibrage");

@@ -1,73 +1,66 @@
-#include <BleSerial.h>
-
-#include <Arduino.h>
-#include <cstdlib>
 
 #include "bluetooth.h"
-#include "gps/gps_core.h"
-
-BleSerial ble;
 
 
-char waypoint_buffer[BLUETOOTH_WAYPOINT_BUFFER_SIZE];
-size_t waypoint_buffer_length = 0;
+static enum frame_state state = FRAME_STATE_IDLE;
+static uint8_t waypoint_payload[BLUETOOTH_WAYPOINT_PAYLOAD_SIZE];
+static size_t waypoint_payload_length = 0;
 
-bool parse_waypoint_message(const char* message, double* latitude, double* longitude) {
-	char* end_lat = nullptr;
-	char* end_lng = nullptr;
+// ---- Instance BLE (à adapter selon ton driver C) ----
+extern BleSerial ble;
 
-	*latitude = strtod(message, &end_lat);
-	if (end_lat == message || *end_lat != ';') {
-		return false;
-	}
+// ---- Parsing ----
+int parse_waypoint_message(const uint8_t* payload, double* latitude, double* longitude) {
+    if (payload == NULL || latitude == NULL || longitude == NULL) {
+        return 0;
+    }
 
-	*longitude = strtod(end_lat + 1, &end_lng);
-	if (end_lng == end_lat + 1) {
-		return false;
-	}
-
-	while (*end_lng == ' ' || *end_lng == '\t') {
-		++end_lng;
-	}
-
-	if (*end_lng != '\0') {
-		return false;
-	}
-	return true;
+    memcpy(latitude, payload, sizeof(double));
+    memcpy(longitude, payload + sizeof(double), sizeof(double));
+    return 1;
 }
 
-uint8_t read_bluetooth_data() {
-	uint8_t waypoint_updated = 0;
-	char c;
-	while (ble.available()) {
-		c = ble.read();
+// ---- Lecture Bluetooth ----
+uint8_t read_bluetooth_data(void) {
+    uint8_t res = BLUETOOTH_EVENT_NONE;
 
-		if (c == '\r' || c == '\n') {
-			if (waypoint_buffer_length == 0) {
-				continue;
-			}
+    while (ble.available()) {
+        uint8_t byte = (uint8_t)ble.read();
 
-			waypoint_buffer[waypoint_buffer_length] = '\0';
+        switch (state) {
 
-			double latitude = 0.0;
-			double longitude = 0.0;
-			if (parse_waypoint_message(waypoint_buffer, &latitude, &longitude)) {
-				if (latitude != waypoint_position.lat || longitude != waypoint_position.lng) {
-					waypoint_position.lat = latitude;
-					waypoint_position.lng = longitude;
-					waypoint_updated = 1;
-				}
-			}
-			waypoint_buffer_length = 0;
-			continue;
-		}
-		if (waypoint_buffer_length < BLUETOOTH_WAYPOINT_BUFFER_SIZE - 1) {
-			waypoint_buffer[waypoint_buffer_length] = c;
-			waypoint_buffer_length++;
-		} else {
-			waypoint_buffer_length = 0;
-		}
-	}
+            case FRAME_STATE_IDLE:
+                if (byte == BLUETOOTH_FRAME_WAYPOINT) {
+                    state = FRAME_STATE_WAYPOINT_PAYLOAD;
+                    waypoint_payload_length = 0;
+                } else if (byte == BLUETOOTH_FRAME_CALIBRATE) {
+                    return BLUETOOTH_EVENT_CALIBRATE_RECEIVED;
+                }
+                break;
 
-	return waypoint_updated;
+            case FRAME_STATE_WAYPOINT_PAYLOAD:
+                waypoint_payload[waypoint_payload_length++] = byte;
+
+                if (waypoint_payload_length == BLUETOOTH_WAYPOINT_PAYLOAD_SIZE) {
+                    double latitude = 0.0;
+                    double longitude = 0.0;
+
+                    if (parse_waypoint_message(waypoint_payload, &latitude, &longitude)) {
+                        if (latitude != waypoint_position.lat ||
+                            longitude != waypoint_position.lng) {
+
+                            waypoint_position.lat = latitude;
+                            waypoint_position.lng = longitude;
+                            res = BLUETOOTH_EVENT_WAYPOINT_RECEIVED;
+                        }
+                    }
+
+                    state = FRAME_STATE_IDLE;
+                    waypoint_payload_length = 0;
+                }
+                break;
+    }
+
+    return BLUETOOTH_EVENT_CALIBRATE_RECEIVED;
+}
 }

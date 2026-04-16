@@ -30,6 +30,8 @@ enum cal_compass_flags : uint8_t {
 
 extern struct flag_manager* cal_compass_flags;
 extern struct component Cal_compass;
+extern uint16_t num_calibration_points_done;
+
 
 void enter_cal_view();
 void update_cal_view();

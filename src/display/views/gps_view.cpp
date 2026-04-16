@@ -6,6 +6,7 @@ struct flag_manager* gps_compass_flags = create_flag_manager(NUM_GPS_COMPASS_FLA
 
 
 void enter_gps_view(){
+    lcd.clear();
     Compass.update = gps_compass_update;
     Compass.flags = gps_compass_flags; //this attributes 'flags' is used in the warn function
 

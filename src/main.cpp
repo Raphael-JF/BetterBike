@@ -69,11 +69,12 @@ case CALIBRATION_VIEW:
     if (read_magnetometer_data()) {
         warn_component(Compass, CAL_CHANGED_MAGNETOMETER_RAW_DATA);
     }
-    
 
-
-
-
+    if(num_calibration_points_done == NUM_COMPASS_PORTIONS * NUM_CALIBRATION_POINTS_PER_PORTION){
+        // if the calibration is done, we can switch to the GPS view
+        enter_gps_view();
+        return;
+    }
 
     update_cal_view();
 
@@ -90,11 +91,18 @@ case GPS_VIEW:
         warn_component(Compass, GPS_CHANGED_CURRENT_POSITION);
     }
 
-    // if a new waypoint is sent by Bluetooth
-    if (read_bluetooth_data()) {
-        warn_component(Compass, GPS_CHANGED_WAYPOINT_POSITION);
+    // if a communication is received via Bluetooth
+    switch (read_bluetooth_data()) {
+        case BLUETOOTH_EVENT_WAYPOINT_RECEIVED:
+            warn_component(Compass, GPS_CHANGED_WAYPOINT_POSITION);
+            break;
+        case BLUETOOTH_EVENT_CALIBRATE_RECEIVED:
+            enter_cal_view();
+            return;
+        default:
+            break;
     }
-
+    
     // if the magnetometer raw data has changed
     if(read_magnetometer_data()){
         warn_component(Compass, GPS_CHANGED_MAGNETOMETER_RAW_DATA);
