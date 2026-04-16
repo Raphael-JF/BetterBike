@@ -6,6 +6,7 @@
 
 
 #include "display/components/compass.h"
+#include "display/components/texts.h"
 #include "display/lcd_core.h"
 
 #include "utils/flag_manager.h"
@@ -15,13 +16,12 @@
 
 
 #define NUM_PIXELS_CALIBRATION_CIRCLE 32 // multiples of 4 are great
-#define NUM_COMPASS_PORTIONS 6
-#define NUM_CALIBRATION_POINTS_PER_PORTION 1
-
+#define NUM_COMPASS_PORTIONS 12
+#define NUM_CALIBRATION_POINTS_PER_PORTION 6
 enum cal_compass_flags : uint8_t {
     CAL_CHANGED_MAGNETOMETER_RAW_DATA = 0,
     CAL_CHANGED_MAGNETOMETER_BEARING = 1,
-    CAL_CHANGED_needle_bearing = 2,
+    CAL_CHANGED_NEEDLE_BEARING = 2,
     CAL_CHANGED_PORTIONS = 3,
     CAL_CHANGED_NEEDLE_POSITION = 4,
     CAL_CHANGED_COMPASS_GRID = 5,
