@@ -3,6 +3,28 @@
 - Enhance the gps_grid to avoid using uint8_t for just bits.
 - Add the support for the GPS module
 
+## Setup LSP Reproductible (clangd)
+
+Pour reproduire la meme config IntelliSense sur une autre machine:
+
+1. Installer les dependances PlatformIO du projet.
+2. Lancer:
+
+```bash
+make lsp-setup
+```
+
+Ce script:
+
+- regenere `compile_commands.json` via PlatformIO,
+- force le compilateur xtensa en chemin absolu dans la base de compilation,
+- regenere `.clangd` avec des options de compatibilite pour eviter les erreurs `unknown argument`.
+
+Ensuite, dans VS Code:
+
+1. Relancer clangd (`Restart language server`), ou
+2. Recharger la fenetre (`Reload Window`).
+
 ## Configuration ESP32
 
 Le projet est maintenant compatible ESP32 (env `esp32dev`) avec:

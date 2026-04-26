@@ -32,3 +32,7 @@ purge:
 # liste ports
 ports:
 	pio device list
+
+# bootstrap LSP/clangd config (portable)
+lsp-setup:
+	./scripts/setup_lsp.sh
