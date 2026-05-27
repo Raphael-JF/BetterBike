@@ -67,13 +67,22 @@ void loop() {
     {
 case CALIBRATION_VIEW:   
     if (read_magnetometer_data()) {
-        warn_component(Compass, CAL_CHANGED_MAGNETOMETER_RAW_DATA);
-    }
-
-    if(num_calibration_points_done == NUM_COMPASS_PORTIONS * NUM_CALIBRATION_POINTS_PER_PORTION){
-        // if the calibration is done, we can switch to the GPS view
-        enter_gps_view();
-        return;
+        set_flag(cal_view_flags, CAL_CHANGED_MAGNETOMETER_RAW_DATA);
+     }
+    // if a communication is received via Bluetooth
+    switch (read_bluetooth_data()) {
+        case BLE_ENTER_CAL:
+            enter_cal_view();
+            return;
+        case BLE_ENTER_GPS:
+            enter_gps_view();
+            return;
+        case BLE_SAVE_CAL:
+            magnetometer_calibrate_compute_offsets();
+            enter_gps_view();
+            return;
+        default:
+            break;
     }
 
     update_cal_view();
@@ -93,10 +102,10 @@ case GPS_VIEW:
 
     // if a communication is received via Bluetooth
     switch (read_bluetooth_data()) {
-        case BLUETOOTH_EVENT_WAYPOINT_RECEIVED:
+        case BLE_NEW_WAYPOINT:
             warn_component(Compass, GPS_CHANGED_WAYPOINT_POSITION);
             break;
-        case BLUETOOTH_EVENT_CALIBRATE_RECEIVED:
+        case BLE_ENTER_CAL:
             enter_cal_view();
             return;
         default:

@@ -13,6 +13,11 @@
 #include <stdint.h>
 #include "magnetometer/magnetometer.h"
 
+extern int16_t x_min;
+extern int16_t x_max;
+extern int16_t y_min;
+extern int16_t y_max;
+
 /**
  * @brief Acquire minimum and maximum values for X and Y axes
  * 
@@ -21,7 +26,7 @@
  * performing a complete rotation of the sensor to obtain accurate
  * calibration data.
  */
-void magnetometer_calibrate_aquire();
+uint8_t magnetometer_calibrate_aquire();
 
 /**
  * @brief Display current calibration values

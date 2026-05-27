@@ -23,9 +23,11 @@ enum frame_state : uint8_t {
 
 
 enum bluetooth_events : uint8_t {
-    BLUETOOTH_EVENT_NONE = 0,
-    BLUETOOTH_EVENT_WAYPOINT_RECEIVED = 1,
-    BLUETOOTH_EVENT_CALIBRATE_RECEIVED = 2,
+    BLE_NONE = 0,
+    BLE_NEW_WAYPOINT = 1,
+    BLE_ENTER_GPS = 2,
+    BLE_ENTER_CAL = 3,
+    BLE_SAVE_CAL = 4,
 };
 
 extern BleSerial ble;

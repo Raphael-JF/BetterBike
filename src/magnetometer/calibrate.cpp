@@ -4,6 +4,7 @@
  */
 
 #include "calibrate.h"
+#include <cstdint>
 
 /** @brief Minimum detected value on the X axis (raw) */
 int16_t x_min;
@@ -17,19 +18,25 @@ int16_t y_min;
 /** @brief Maximum detected value on the Y axis (raw) */
 int16_t y_max;
 
-void magnetometer_calibrate_aquire(){
+uint8_t magnetometer_calibrate_aquire(){
+    uint8_t flag = 0;
     if(raw_data.x < x_min){
         x_min = raw_data.x;
+        flag = 1;
     }
     if(raw_data.x > x_max){
         x_max = raw_data.x;
+        flag = 1;
     }
     if(raw_data.y < y_min){
         y_min = raw_data.y;
+        flag = 1;
     }
     if(raw_data.y > y_max){
         y_max = raw_data.y;
+        flag = 1;
     }
+    return flag;
 }
 
 void magnetometer_calibrate_print(){

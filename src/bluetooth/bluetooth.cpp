@@ -1,4 +1,3 @@
-
 #include "bluetooth.h"
 
 
@@ -7,7 +6,7 @@ static uint8_t waypoint_payload[BLUETOOTH_WAYPOINT_PAYLOAD_SIZE];
 static size_t waypoint_payload_length = 0;
 
 // ---- Instance BLE (à adapter selon ton driver C) ----
-extern BleSerial ble;
+BleSerial ble;
 
 // ---- Parsing ----
 int parse_waypoint_message(const uint8_t* payload, double* latitude, double* longitude) {
@@ -22,7 +21,7 @@ int parse_waypoint_message(const uint8_t* payload, double* latitude, double* lon
 
 // ---- Lecture Bluetooth ----
 uint8_t read_bluetooth_data(void) {
-    uint8_t res = BLUETOOTH_EVENT_NONE;
+    uint8_t res = BLE_NONE;
 
     while (ble.available()) {
         uint8_t byte = (uint8_t)ble.read();
@@ -34,7 +33,7 @@ uint8_t read_bluetooth_data(void) {
                     state = FRAME_STATE_WAYPOINT_PAYLOAD;
                     waypoint_payload_length = 0;
                 } else if (byte == BLUETOOTH_FRAME_CALIBRATE) {
-                    return BLUETOOTH_EVENT_CALIBRATE_RECEIVED;
+                    return BLE_ENTER_CAL;
                 }
                 break;
 
@@ -51,7 +50,7 @@ uint8_t read_bluetooth_data(void) {
 
                             waypoint_position.lat = latitude;
                             waypoint_position.lng = longitude;
-                            res = BLUETOOTH_EVENT_WAYPOINT_RECEIVED;
+                            res = BLE_NEW_WAYPOINT;
                         }
                     }
 
@@ -59,8 +58,8 @@ uint8_t read_bluetooth_data(void) {
                     waypoint_payload_length = 0;
                 }
                 break;
-    }
+        }
 
-    return BLUETOOTH_EVENT_CALIBRATE_RECEIVED;
-}
+    } 
+    return BLE_NONE;
 }

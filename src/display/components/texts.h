@@ -17,7 +17,7 @@ struct text {
     uint8_t col;
     uint8_t row;
     char message[17];
-    struct component component;
+    struct flag_manager* flags;
 };
 
 
@@ -25,7 +25,14 @@ struct text {
 extern struct text Text1;
 extern struct text Text2;
 extern struct text Text3;
+extern struct text Text4;
 
+
+/**
+ * @brief Update the text component `st` if needed, for example by changing its `message` attribute, and then refresh it on the LCD.
+ * The component will warn itself if it was changed and needs to be refreshed.
+ */
+void text_update(struct text* t);
 
 /**
  * @brief Push the text `t` to the LCD at the position defined by its attributes `col` and `row`.

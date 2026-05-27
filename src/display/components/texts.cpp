@@ -4,34 +4,38 @@ struct text Text1 = {
     0,
     0,
     "                ", // 16 spaces to clear the line when printed
-    {
-        nullptr,
-        nullptr,
-        create_flag_manager(NUM_TEXT_FLAGS)
-    }
+    create_flag_manager(NUM_TEXT_FLAGS),
 };
 
 struct text Text2 = {
     0,
     0,
     "                ", // 16 spaces to clear the line when printed
-    {
-        nullptr,
-        nullptr,
-        create_flag_manager(NUM_TEXT_FLAGS)
-    }
+    create_flag_manager(NUM_TEXT_FLAGS),
 };
 
 struct text Text3 = {
     0,
     0,
     "                ", // 16 spaces to clear the line when printed
-    {
-        nullptr,
-        nullptr,
-        create_flag_manager(NUM_TEXT_FLAGS)
-    }
+    create_flag_manager(NUM_TEXT_FLAGS),
 };
+
+
+struct text Text4 = {
+    0,
+    0,
+    "                ", // 16 spaces to clear the line when printed
+    create_flag_manager(NUM_TEXT_FLAGS),
+};
+
+
+void text_update(struct text* t) {
+    if (is_flag_set(t->flags, CHANGED_TEXT)) {
+        display_refresh_text(t);
+        clear_flag(t->flags, CHANGED_TEXT);
+    }
+}
 
 void display_refresh_text(struct text *t) {
     lcd.setCursor(t->col, t->row);
@@ -44,7 +48,7 @@ void change_text_message(struct text *t, char* new_message) {
     while (i < 17 && new_message[i] != '\0') {
         if (t->message[i] != new_message[i]) {
             t->message[i] = new_message[i];
-            set_flag(t->component.flags, CHANGED_TEXT);
+            set_flag(t->flags, CHANGED_TEXT);
         }
         i++;
     }
@@ -53,7 +57,7 @@ void change_text_message(struct text *t, char* new_message) {
     while(i < 17) {
         if (t->message[i] != ' ') {
             t->message[i] = ' ';
-                        set_flag(t->component.flags, CHANGED_TEXT);
+                        set_flag(t->flags, CHANGED_TEXT);
 
         }
         i++;
@@ -64,6 +68,6 @@ void change_text_position(struct text *t, uint8_t col, uint8_t row) {
     if (t->col != col || t->row != row) {
         t->col = col;
         t->row = row;
-        set_flag(t->component.flags, CHANGED_TEXT);
+        set_flag(t->flags, CHANGED_TEXT);
     }
 }
