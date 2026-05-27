@@ -8,7 +8,66 @@ Rw0 = 0.350   # rayon roue 700c (m)
 Of0 = 0.045   # offset fourche route typique (m)
 Ah0 = 72.0    # angle de tête en degrés (route ~72°)
 
+import math
+
 def chasse_velo(Rw, Of, Ah_deg):
+    """
+    Affiche le schéma de la chasse d'un vélo et calcule la chasse géométrique correcte.
+    Rw: Rayon de la roue (mm)
+    Of: Offset de la fourche (mm)
+    Ah_deg: Angle de chasse (degrés)
+    """
+    import matplotlib.pyplot as plt
+
+    # Conversion en radians
+    Ah = math.radians(Ah_deg)
+
+    # Position du centre de la roue
+    x_wheel = 0
+    y_wheel = 0
+
+    # Axe de direction (passe par l'axe de rotation de la fourche)
+    # On part du haut (au-dessus de la roue) et on descend vers le sol
+    # L'axe doit "rejoindre l'intérieur de la roue" donc il coupe le sol à l'intérieur du pneu
+    # Calcul du point d'intersection de l'axe de direction avec le sol (y= -Rw)
+    # Equation de l'axe: x = y * tan(Ah)
+    x_sol = -Rw * math.tan(Ah)
+    y_sol = -Rw
+
+    # Offset de la fourche: déplacement perpendiculaire à l'axe de direction
+    # Calcul du vecteur perpendiculaire à l'axe de direction
+    dx_offset = Of * math.cos(Ah)
+    dy_offset = Of * math.sin(Ah)
+
+    # Position de l'axe de roue (après offset)
+    x_axis = x_sol + dx_offset
+    y_axis = y_sol + dy_offset
+
+    # Calcul de la chasse géométrique (distance horizontale entre l'axe de direction au sol et le point de contact roue-sol)
+    chasse = abs(x_sol - x_wheel)
+
+    # Affichage
+    fig, ax = plt.subplots()
+    # Roue
+    circle = plt.Circle((x_wheel, y_wheel), Rw, fill=False, color='black', linewidth=2)
+    ax.add_patch(circle)
+    # Axe de direction
+    ax.plot([x_sol, 0], [y_sol, 0], color='red', label="Axe de direction")
+    # Axe de roue (après offset)
+    ax.plot([x_axis, x_axis], [y_axis, y_axis + 2*Rw], color='blue', label="Axe de roue (offset)")
+    # Point de contact roue-sol
+    ax.plot([x_wheel], [y_sol], 'ko', label="Contact roue-sol")
+    # Chasse (trait horizontal)
+    ax.plot([x_sol, x_wheel], [y_sol, y_sol], 'g--', label="Chasse (géométrique)")
+
+    ax.set_aspect('equal')
+    ax.set_xlabel('x (mm)')
+    ax.set_ylabel('y (mm)')
+    ax.legend()
+    ax.set_title(f"Chasse géométrique = {chasse:.1f} mm")
+    ax.grid(True)
+    plt.show()
+    return chasse
     Ah = np.deg2rad(Ah_deg)
     return (Rw * np.cos(Ah) - Of) / np.sin(Ah)
 
