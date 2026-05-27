@@ -4,8 +4,8 @@
 #include "utils/flag_manager.h"
 
 struct component {
-    void (*on_enter)(struct component* self);
-    void (*update)(struct component* self);
+    void (*on_enter)(void* self);
+    void (*update)(void* self);
     struct flag_manager* flags;
 };
 
