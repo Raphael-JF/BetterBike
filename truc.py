@@ -1,65 +1,172 @@
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider
+from matplotlib.patches import Circle
 import numpy as np
 
-# initial parameters
-Rw0 = 0.33   # wheel radius (m)
-Of0 = 0.04   # fork offset (m)
-Ah0 = 20     # head angle in degrees
+# Paramètres initiaux — roue 700c route (rayon = 350 mm)
+Rw0 = 0.350   # rayon roue 700c (m)
+Of0 = 0.045   # offset fourche route typique (m)
+Ah0 = 72.0    # angle de tête en degrés (route ~72°)
 
 def chasse_velo(Rw, Of, Ah_deg):
     Ah = np.deg2rad(Ah_deg)
     return (Rw * np.cos(Ah) - Of) / np.sin(Ah)
 
-fig, ax = plt.subplots()
-plt.subplots_adjust(bottom=0.35)
+fig, ax = plt.subplots(figsize=(7, 6))
+plt.subplots_adjust(bottom=0.30)
 
-# We'll draw the segments in the update function
-ax.set_xlim(-0.1, 0.6)
-ax.set_ylim(-0.1, 0.6)
+ax.set_xlim(-0.05, 0.70)
+ax.set_ylim(-0.08, 0.80)
 ax.set_aspect('equal')
 ax.set_axis_off()
+ax.set_title("Géométrie de fourche — chasse vélo", fontsize=12, pad=10)
 
-text = ax.text(0.05, 0.95, "", fontsize=12, va='top', ha='left', transform=ax.transAxes)
+# Sol
+ax.axhline(0, color='#888', linewidth=1.2, zorder=0)
 
-# Placeholders for the lines
-segment_lines = [ax.plot([], [], 'b-', lw=2)[0] for _ in range(3)]
+# Éléments graphiques
+line_axis,   = ax.plot([], [], color='#3B8BD4', lw=2,   label='Axe de direction', zorder=3)
+line_offset, = ax.plot([], [], color='#D85A30', lw=2.5, label='Offset fourche',   zorder=4)
+line_trail,  = ax.plot([], [], color='#533AB7', lw=2,   linestyle='--',
+                        label='Chasse (trail)', zorder=3)
+wheel_patch  = Circle((0, 0), 0.35, fill=False, edgecolor='#1D9E75', linewidth=2, zorder=2)
+ax.add_patch(wheel_patch)
+
+dot_contact = ax.plot([], [], 'o', color='#D85A30', ms=7, zorder=5)[0]
+dot_center  = ax.plot([], [], 'o', color='#1D9E75', ms=5, zorder=5)[0]
+dot_axisgnd = ax.plot([], [], 'o', color='#3B8BD4', ms=5, zorder=5)[0]
+
+text_info = ax.text(0.02, 0.97, "", fontsize=11, va='top', ha='left',
+                    transform=ax.transAxes, family='monospace')
+
+ax.legend(loc='upper right', fontsize=9, framealpha=0.6)
 
 def update(val):
     Ah_deg = slider_Ah.val
-    Rw = slider_Rw.val
-    Of = slider_Of.val
+    Rw     = slider_Rw.val
+    Of     = slider_Of.val
+    Ah     = np.deg2rad(Ah_deg)
 
-    Ah = np.deg2rad(Ah_deg)
     zv = chasse_velo(Rw, Of, Ah_deg)
 
-    # Segment 1: axis of the head tube (from (0,0) to intersection with ground)
-    # Let's draw it from (0,0) to (x1, y1) where y1 = 0.5 (arbitrary), x1 = y1 / tan(Ah)
-    y1 = 0.5
-    x1 = y1 / np.tan(Ah)
-    segment_lines[0].set_data([0, x1], [0, y1])
+    # --- Géométrie ---
+    # Point de contact roue/sol
+    cx, cy = 0.25, 0.0         # contact fixe sur le sol
 
-    # Segment 2: wheel contact point (vertical from (x1,0) to (x1, Rw))
-    segment_lines[1].set_data([x1, x1], [0, Rw])
+    # Centre de la roue
+    wcx, wcy = cx, Rw
 
-    # Segment 3: offset (horizontal from (x1,0) to (x1 + Of, 0))
-    segment_lines[2].set_data([x1, x1 + Of], [0, 0])
+    # Offset : perpendiculaire à l'axe de direction
+    # Axe de direction : vecteur unitaire (sin Ah, cos Ah) depuis le bas
+    # Perpendiculaire (vers l'avant) : (cos Ah, -sin Ah)
+    perp_x =  np.cos(Ah)
+    perp_y = -np.sin(Ah)
 
-    text.set_text(f"Chasse vélo: {zv:.3f} m\nAngle de direction: {Ah_deg:.1f}°")
+    # Point d'attache de la fourche sur l'axe (depuis centre de roue + offset)
+    fp_x = wcx + Of * perp_x
+    fp_y = wcy + Of * perp_y
+
+    # L'axe passe par fp dans la direction (sin Ah, cos Ah)
+    # Intersection avec le sol (y=0) : y = fp_y + cos(Ah)*t = 0 → t = -fp_y / cos(Ah)
+    t_gnd   = -fp_y / np.cos(Ah)
+    ag_x    = fp_x + np.sin(Ah) * t_gnd   # intersection axe/sol
+    ag_y    = 0.0
+
+    # Prolonger l'axe vers le haut
+    t_top   = -0.75
+    at_x    = fp_x + np.sin(Ah) * t_top
+    at_y    = fp_y + np.cos(Ah) * t_top
+
+    # Chasse au sol (de ag_x à cx, à y légèrement au-dessus du sol)
+    trail_y = -0.025
+
+    # --- Mise à jour des tracés ---
+    line_axis.set_data([ag_x, at_x], [ag_y, at_y])
+    line_offset.set_data([wcx, fp_x], [wcy, fp_y])
+    line_trail.set_data([ag_x, cx],  [trail_y, trail_y])
+
+    wheel_patch.center = (wcx, wcy)
+    wheel_patch.radius = Rw
+
+    dot_contact.set_data([cx],  [0])
+    dot_center.set_data( [wcx], [wcy])
+    dot_axisgnd.set_data([ag_x],[0])
+
+    text_info.set_text(
+        f"Ah  = {Ah_deg:.1f}°\n"
+        f"Rw  = {Rw*1000:.0f} mm\n"
+        f"Of  = {Of*1000:.1f} mm\n"
+        f"────────────\n"
+        f"Trail = {zv*1000:.1f} mm"
+    )
+
     fig.canvas.draw_idle()
 
-ax_Ah = plt.axes([0.2, 0.25, 0.65, 0.03])
-ax_Rw = plt.axes([0.2, 0.15, 0.65, 0.03])
-ax_Of = plt.axes([0.2, 0.10, 0.65, 0.03])
 
-slider_Ah = Slider(ax_Ah, 'Ah (°)', 5, 85, valinit=Ah0)
-slider_Rw = Slider(ax_Rw, 'Rw (m)', 0.1, 0.7, valinit=Rw0)
-slider_Of = Slider(ax_Of, 'Of (m)', 0.0, 0.2, valinit=Of0)
+# Sliders
+ax_Ah = plt.axes([0.18, 0.20, 0.65, 0.03])
+ax_Rw = plt.axes([0.18, 0.14, 0.65, 0.03])
+ax_Of = plt.axes([0.18, 0.08, 0.65, 0.03])
+
+slider_Ah = Slider(ax_Ah, 'Ah (°)',   5,    85,   valinit=Ah0, valstep=0.5)
+slider_Rw = Slider(ax_Rw, 'Rw (mm)', 200,  400,   valinit=Rw0*1000, valstep=1)
+slider_Of = Slider(ax_Of, 'Of (mm)',  0,    100,   valinit=Of0*1000, valstep=0.5)
+
+# Les sliders Rw et Of affichent des mm mais on reconvertit en m dans update
+_orig_update = update
+def update(val):
+    slider_Rw.valtext.set_text(f'{slider_Rw.val:.0f}')
+    slider_Of.valtext.set_text(f'{slider_Of.val:.1f}')
+    # Patch : lire en mm, passer en m
+    Ah_deg = slider_Ah.val
+    Rw     = slider_Rw.val / 1000.0
+    Of     = slider_Of.val / 1000.0
+    Ah     = np.deg2rad(Ah_deg)
+    zv     = chasse_velo(Rw, Of, Ah_deg)
+
+    cx, cy   = 0.25, 0.0
+    wcx, wcy = cx, Rw
+
+    perp_x =  np.cos(Ah)
+    perp_y = -np.sin(Ah)
+    fp_x = wcx + Of * perp_x
+    fp_y = wcy + Of * perp_y
+
+    t_gnd = -fp_y / np.cos(Ah)
+    ag_x  = fp_x + np.sin(Ah) * t_gnd
+    ag_y  = 0.0
+
+    t_top = -0.75
+    at_x  = fp_x + np.sin(Ah) * t_top
+    at_y  = fp_y + np.cos(Ah) * t_top
+
+    trail_y = -0.025
+
+    line_axis.set_data(  [ag_x, at_x], [ag_y, at_y])
+    line_offset.set_data([wcx,  fp_x], [wcy,  fp_y])
+    line_trail.set_data( [ag_x, cx],   [trail_y, trail_y])
+
+    wheel_patch.center = (wcx, wcy)
+    wheel_patch.radius = Rw
+
+    dot_contact.set_data([cx],  [0])
+    dot_center.set_data( [wcx], [wcy])
+    dot_axisgnd.set_data([ag_x],[0])
+
+    text_info.set_text(
+        f"Ah  = {Ah_deg:.1f}°\n"
+        f"Rw  = {Rw*1000:.0f} mm\n"
+        f"Of  = {Of*1000:.1f} mm\n"
+        f"────────────\n"
+        f"Trail = {zv*1000:.1f} mm"
+    )
+
+    fig.canvas.draw_idle()
+
 
 slider_Ah.on_changed(update)
 slider_Rw.on_changed(update)
 slider_Of.on_changed(update)
 
 update(None)
-
 plt.show()
