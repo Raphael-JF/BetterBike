@@ -200,8 +200,8 @@ body {
 }
 
 #map {
-    height: 62vh;
-    min-height: 360px;
+    /*height: 62vh;*/
+    /*min-height: 360px;*/
     border-radius: var(--radius);
     overflow: hidden;
     box-shadow: var(--shadow);
@@ -263,6 +263,9 @@ body {
     border-color: rgba(255, 77, 109, 0.35);
 }
 
+#btnSendWaypoint {
+    margin-left: auto;
+}
 .panelDivider {
     height: 1px;
     margin-top: 12px;
