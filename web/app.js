@@ -130,8 +130,6 @@ async function sendWaypoint() {
         return;
     }
 
-    const TYPE_WAYPOINT = 0x01;
-
     const buffer = new ArrayBuffer(17);
     const view = new DataView(buffer);
 
