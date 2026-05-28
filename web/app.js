@@ -330,9 +330,23 @@ function centerOnMarker() {
     map.setView([lat, lon], map.getZoom());
 }
 
-function startCalibration() {
-    // TODO: implement calibration start (BLE command, UI switch, etc.)
-    // Example idea: send a BLE command "CAL_START\n"
+async function startCalibration() {
+    if (!characteristic) {
+        showToast("Not connected to BLE.", "error");
+        return;
+    }
+
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+
+    view.setUint8(0, TYPE_CALIBRATION);
+
+    try {
+        await characteristic.writeValue(buffer);
+        showToast("Calibration started.", "ok");
+    } catch (e) {
+        showToast("Send failed: " + e, "error", 3500);
+    }
 }
 
 function stopCalibration() {
