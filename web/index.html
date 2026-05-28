@@ -85,31 +85,33 @@
             </section>
 
             <section id="mapView" class="view" aria-label="Map view">
-                <div id="map"></div>
+                <div id="mapViewWrap">
+                    <div id="map"></div>
 
-                <div id="panel">
-                    <div class="coords">
-                        <div>Lat: <span id="lat">-</span></div>
-                        <div>Lon: <span id="lon">-</span></div>
-                    </div>
+                    <div id="panel">
+                        <div class="coords">
+                            <div>Lat: <span id="lat">-</span></div>
+                            <div>Lon: <span id="lon">-</span></div>
+                        </div>
 
-                    <div class="panelActions">
-                        <button id="btnBackToMenu" type="button">Back</button>
-                        <button id="btnCenterMarker" type="button">Center</button>
-                    </div>
+                        <div class="panelActions">
+                            <button id="btnBackToMenu" type="button">Back</button>
+                            <button id="btnCenterMarker" type="button">Center</button>
+                            <button id="btnSendWaypoint" type="button">Send</button>
+                        </div>
 
-                    <div class="panelDivider" role="separator" aria-hidden="true"></div>
+                        <div class="panelDivider" role="separator" aria-hidden="true"></div>
 
-                    <div class="panelActions panelActionsWrap">
-                        <button id="btnSendWaypoint" type="button">Send</button>
-                        <button id="btnSaveWaypoint" type="button">Save</button>
-                        <button id="btnLoadWaypoint" type="button">Load</button>
-                        <button id="btnRenameWaypoint" type="button">Rename</button>
-                        <button id="btnDeleteWaypoint" type="button" class="danger">Delete</button>
-                    </div>
+                        <div class="panelActions panelActionsWrap">
+                            <button id="btnSaveWaypoint" type="button">Save</button>
+                            <button id="btnLoadWaypoint" type="button">Load</button>
+                            <button id="btnRenameWaypoint" type="button">Rename</button>
+                            <button id="btnDeleteWaypoint" type="button" class="danger">Delete</button>
+                        </div>
 
-                    <div class="panelHint" id="mapHint" aria-live="polite">
-                        Tip: click on the map to select a waypoint.
+                        <div class="panelHint" id="mapHint" aria-live="polite">
+                            Tip: click on the map to select a waypoint.
+                        </div>
                     </div>
                 </div>
             </section>

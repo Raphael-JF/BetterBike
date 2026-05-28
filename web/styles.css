@@ -196,12 +196,20 @@ body {
 }
 
 #mapView {
+    width : min(920px, 100%);
+}
+
+#mapViewWrap {
     width: min(920px, 100%);
+    display: flex;
+    flex-direction: column;
+    height : 100%;:
 }
 
 #map {
     /*height: 62vh;*/
     /*min-height: 360px;*/
+    flex: 1;
     border-radius: var(--radius);
     overflow: hidden;
     box-shadow: var(--shadow);
