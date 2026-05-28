@@ -1,18 +1,251 @@
+:root {
+    --bg: #0b1020;
+    --card: rgba(255, 255, 255, 0.08);
+    --card2: rgba(255, 255, 255, 0.12);
+    --text: rgba(255, 255, 255, 0.92);
+    --muted: rgba(255, 255, 255, 0.68);
+    --accent: #7c5cff;
+    --danger: #ff4d6d;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --radius: 18px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
 body {
     margin: 0;
-    font-family: sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    background: radial-gradient(1000px 600px at 20% 10%, rgba(124, 92, 255, 0.35), transparent 60%),
+                radial-gradient(900px 500px at 90% 30%, rgba(0, 209, 255, 0.25), transparent 55%),
+                radial-gradient(900px 600px at 40% 90%, rgba(255, 77, 109, 0.18), transparent 60%),
+                var(--bg);
+    color: var(--text);
+}
+
+#app {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 16px 10px 16px;
+}
+
+#brand {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+#brandMark {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(124, 92, 255, 0.95), rgba(0, 209, 255, 0.75));
+    box-shadow: var(--shadow);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+#brandTitle {
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+#brandSubtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+#topbarActions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.topbarBtn {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.topbarBtn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.topbarBtn:active {
+    transform: translateY(1px);
+}
+
+#main {
+    flex: 1;
+    padding: 10px 16px 24px 16px;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.view {
+    width: min(520px, 100%);
+    display: none;
+}
+
+.viewActive {
+    display: block;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.menuBtn {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 12px;
+    align-items: center;
+
+    padding: 14px 14px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.06));
+    box-shadow: var(--shadow);
+
+    cursor: pointer;
+    color: var(--text);
+    text-align: left;
+
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.menuBtn:hover {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.menuBtn:active {
+    transform: translateY(1px);
+}
+
+.menuBtnIcon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+
+    background: rgba(124, 92, 255, 0.18);
+    border: 1px solid rgba(124, 92, 255, 0.35);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.menuBtnDanger .menuBtnIcon {
+    background: rgba(255, 77, 109, 0.16);
+    border: 1px solid rgba(255, 77, 109, 0.35);
+}
+
+.menuBtnText {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.menuBtnTitle {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.menuBtnDesc {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.menuStatus {
+    margin-top: 6px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    background: rgba(0, 0, 0, 0.12);
+    color: var(--muted);
+    font-size: 13px;
+}
+
+#mapView {
+    width: min(920px, 100%);
 }
 
 #map {
-    height: 80vh;
+    height: 62vh;
+    min-height: 360px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 #panel {
-    padding: 10px;
-    background: #eee;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow);
 }
 
-button {
-    padding: 10px;
-    font-size: 16px;
+.coords {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.coords span {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.panelActions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.panelActions button {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    border-radius: 14px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.panelActions button:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.panelActions button:active {
+    transform: translateY(1px);
 }
