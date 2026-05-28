@@ -130,11 +130,19 @@ async function sendWaypoint() {
         return;
     }
 
-    const msg = `${lat};${lon}\n`;
-    const encoder = new TextEncoder();
+    const TYPE_WAYPOINT = 0x01;
+
+    const buffer = new ArrayBuffer(17);
+    const view = new DataView(buffer);
+
+    view.setUint8(0, TYPE_WAYPOINT);
+
+    // little endian = true pour ESP32
+    view.setFloat64(1, lat, true);
+    view.setFloat64(9, lon, true);
 
     try {
-        await characteristic.writeValue(encoder.encode(msg));
+        await characteristic.writeValue(buffer);
         showToast("Waypoint sent.", "ok");
     } catch (e) {
         showToast("Send failed: " + e, "error", 3500);
