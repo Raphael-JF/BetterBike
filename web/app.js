@@ -91,10 +91,6 @@ async function connectBLE() {
 }
 
 async function sendWaypoint() {
-    if (!bleIsConnected()) {
-        showToast("Not connected to BLE.", "error");
-        return;
-    }
     if (lat === null || lon === null) {
         showToast("Select a waypoint on the map first.", "error");
         return;
@@ -109,12 +105,8 @@ async function sendWaypoint() {
     view.setFloat64(1, lat, true);
     view.setFloat64(9, lon, true);
 
-    try {
-        await bleSendFrame(buffer);
-        showToast("Waypoint sent.", "ok");
-    } catch (e) {
-        showToast("Send failed: " + e, "error", 3500);
-    }
+    await bleSendFrame(buffer);
+    showToast("Waypoint sent.", "ok");
 }
 
 function getStoredWaypoints() {
@@ -301,22 +293,13 @@ function centerOnMarker() {
 }
 
 async function startCalibration() {
-    if (!bleIsConnected()) {
-        showToast("Not connected to BLE.", "error");
-        return;
-    }
-
     const buffer = new ArrayBuffer(1);
     const view = new DataView(buffer);
 
     view.setUint8(0, TYPE_CALIBRATION);
 
-    try {
-        await bleSendFrame(buffer);
-        showToast("Calibration started.", "ok");
-    } catch (e) {
-        showToast("Send failed: " + e, "error", 3500);
-    }
+    bleSendFrame(buffer);
+    showToast("Calibration started.", "ok");
 }
 
 function stopCalibration() {
@@ -377,7 +360,7 @@ function initUi() {
     qs("#btnConnectBle").addEventListener("click", connectBLE);
     qs("#btnToggleCalibrate").addEventListener("click", toggleCalibration);
 
-    // Map actions (waypoints live here now)
+    // Map actions 
     qs("#btnSendWaypoint").addEventListener("click", sendWaypoint);
     qs("#btnSaveWaypoint").addEventListener("click", saveWaypoint);
     qs("#btnLoadWaypoint").addEventListener("click", loadWaypoint);

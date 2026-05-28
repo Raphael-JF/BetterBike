@@ -46,30 +46,17 @@ async function bleConnect() {
     throw new Error("No writable BLE characteristic found.");
 }
 
-function bleNormalizeToArrayBuffer(frame) {
-    if (frame instanceof ArrayBuffer) {
-        return frame;
-    }
 
-    // DataView
-    if (frame && frame.buffer instanceof ArrayBuffer) {
-        // TypedArray or DataView
-        if (typeof frame.byteOffset === "number" && typeof frame.byteLength === "number") {
-            return frame.buffer.slice(frame.byteOffset, frame.byteOffset + frame.byteLength);
-        }
-        return frame.buffer;
+async function bleSendFrame(buffer) {
+    if (!bleIsConnected()) {
+        showToast("Not connected to BLE.", "error");
+        return;
     }
-
-    throw new Error("Unsupported frame type. Use ArrayBuffer, TypedArray, or DataView.");
+    try {
+        await bleCharacteristic.writeValue(buffer);
+    } catch (e) {
+        showToast("Send failed: " + e, "error", 3500);
+    }
 }
 
-async function bleSendFrame(frame) {
-    if (!bleCharacteristic) {
-        throw new Error("BLE not connected.");
-    }
 
-    const buffer = bleNormalizeToArrayBuffer(frame);
-
-    // Web Bluetooth accepts BufferSource; ArrayBuffer is ok
-    await bleCharacteristic.writeValue(buffer);
-}
