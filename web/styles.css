@@ -147,6 +147,11 @@ body {
     transform: translateY(1px);
 }
 
+.menuBtn[aria-pressed="true"] .menuBtnIcon {
+    background: rgba(255, 77, 109, 0.16);
+    border: 1px solid rgba(255, 77, 109, 0.35);
+}
+
 .menuBtnIcon {
     width: 56px;
     height: 56px;
@@ -231,6 +236,10 @@ body {
     gap: 10px;
 }
 
+.panelActionsWrap {
+    flex-wrap: wrap;
+}
+
 .panelActions button {
     appearance: none;
     border: 1px solid rgba(255, 255, 255, 0.18);
@@ -239,7 +248,7 @@ body {
     border-radius: 14px;
     padding: 10px 12px;
     cursor: pointer;
-    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
 }
 
 .panelActions button:hover {
@@ -248,4 +257,52 @@ body {
 
 .panelActions button:active {
     transform: translateY(1px);
+}
+
+.panelActions button.danger {
+    border-color: rgba(255, 77, 109, 0.35);
+}
+
+.panelDivider {
+    height: 1px;
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.panelHint {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+#toastHost {
+    position: fixed;
+    inset: auto 16px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.toast {
+    pointer-events: none;
+    align-self: center;
+    width: min(560px, 100%);
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(10, 14, 28, 0.85);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.toast.toastError {
+    border-color: rgba(255, 77, 109, 0.40);
+}
+
+.toast.toastOk {
+    border-color: rgba(0, 209, 255, 0.35);
 }

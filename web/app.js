@@ -9,18 +9,37 @@ const WAYPOINTS_STORAGE_KEY = "betterbike_waypoints_v1";
 let device = null;
 let characteristic = null;
 
+// Calibrate toggle (UI + placeholder hooks)
+let calibrating = false;
+
 function qs(sel) {
     return document.querySelector(sel);
+}
+
+function showToast(message, kind = "ok", timeoutMs = 2200) {
+    const host = qs("#toastHost");
+    if (!host) return;
+
+    const el = document.createElement("div");
+    el.className = `toast ${kind === "error" ? "toastError" : "toastOk"}`;
+    el.textContent = message;
+
+    host.appendChild(el);
+
+    window.setTimeout(() => {
+        el.remove();
+    }, timeoutMs);
 }
 
 function setStatusLine() {
     const bleStatus = characteristic ? "Connected." : "Not connected.";
     const wpStatus = lat !== null && lon !== null
-        ? `Waypoint selected: ${lat.toFixed(6)}, ${lon.toFixed(6)}.`
+        ? `Waypoint: ${lat.toFixed(6)}, ${lon.toFixed(6)}.`
         : "No waypoint selected.";
+    const calStatus = calibrating ? "Calibrating." : "";
 
     const el = qs("#statusLine");
-    if (el) el.textContent = `${bleStatus} ${wpStatus}`;
+    if (el) el.textContent = [bleStatus, wpStatus, calStatus].filter(Boolean).join(" ");
 }
 
 function showView(viewId) {
@@ -83,7 +102,7 @@ async function connectBLE() {
                     // first writable
                     if (char.properties.write || char.properties.writeWithoutResponse) {
                         characteristic = char;
-                        alert("Connected and writable characteristic found!");
+                        showToast("BLE connected.", "ok");
                         setStatusLine();
                         return;
                     }
@@ -93,25 +112,33 @@ async function connectBLE() {
             }
         }
 
-        alert("No writable characteristic found.");
+        showToast("No writable BLE characteristic found.", "error");
         setStatusLine();
     } catch (e) {
-        alert("Error: " + e);
+        showToast("BLE error: " + e, "error", 3500);
         setStatusLine();
     }
 }
 
 async function sendWaypoint() {
-    if (!characteristic || lat === null || lon === null) {
-        alert("Not connected or no waypoint selected.");
+    if (!characteristic) {
+        showToast("Not connected to BLE.", "error");
+        return;
+    }
+    if (lat === null || lon === null) {
+        showToast("Select a waypoint on the map first.", "error");
         return;
     }
 
     const msg = `${lat};${lon}\n`;
     const encoder = new TextEncoder();
-    await characteristic.writeValue(encoder.encode(msg));
 
-    alert("Sent: " + msg);
+    try {
+        await characteristic.writeValue(encoder.encode(msg));
+        showToast("Waypoint sent.", "ok");
+    } catch (e) {
+        showToast("Send failed: " + e, "error", 3500);
+    }
 }
 
 function getStoredWaypoints() {
@@ -145,7 +172,7 @@ function promptWaypointIndex(waypoints, actionLabel) {
 
     const selectedIndex = Number.parseInt(choice, 10) - 1;
     if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= waypoints.length) {
-        alert("Invalid choice.");
+        showToast("Invalid choice.", "error");
         return null;
     }
 
@@ -154,7 +181,7 @@ function promptWaypointIndex(waypoints, actionLabel) {
 
 function saveWaypoint() {
     if (lat === null || lon === null) {
-        alert("Select a point on the map before saving.");
+        showToast("Select a point on the map before saving.", "error");
         return;
     }
 
@@ -167,7 +194,7 @@ function saveWaypoint() {
 
     const name = inputName.trim();
     if (!name) {
-        alert("Invalid name.");
+        showToast("Invalid name.", "error");
         return;
     }
 
@@ -182,14 +209,14 @@ function saveWaypoint() {
     }
 
     setStoredWaypoints(waypoints);
-    alert(`Waypoint "${name}" saved.`);
+    showToast(`Saved "${name}".`, "ok");
 }
 
 function loadWaypoint() {
     const waypoints = getStoredWaypoints();
 
     if (waypoints.length === 0) {
-        alert("No saved waypoints.");
+        showToast("No saved waypoints.", "error");
         return;
     }
 
@@ -220,14 +247,14 @@ function loadWaypoint() {
     setTimeout(() => map.invalidateSize(), 0);
 
     setStatusLine();
-    alert(`Waypoint "${selected.name}" loaded.`);
+    showToast(`Loaded "${selected.name}".`, "ok");
 }
 
 function renameWaypoint() {
     const waypoints = getStoredWaypoints();
 
     if (waypoints.length === 0) {
-        alert("No saved waypoints.");
+        showToast("No saved waypoints.", "error");
         return;
     }
 
@@ -245,12 +272,12 @@ function renameWaypoint() {
 
     const newName = inputName.trim();
     if (!newName) {
-        alert("Invalid name.");
+        showToast("Invalid name.", "error");
         return;
     }
 
     if (waypoints.some((wp, index) => index !== selectedIndex && wp.name === newName)) {
-        alert("That name already exists.");
+        showToast("That name already exists.", "error");
         return;
     }
 
@@ -261,14 +288,14 @@ function renameWaypoint() {
     };
 
     setStoredWaypoints(waypoints);
-    alert(`Waypoint "${current.name}" renamed to "${newName}".`);
+    showToast(`Renamed to "${newName}".`, "ok");
 }
 
 function deleteWaypoint() {
     const waypoints = getStoredWaypoints();
 
     if (waypoints.length === 0) {
-        alert("No saved waypoints.");
+        showToast("No saved waypoints.", "error");
         return;
     }
 
@@ -286,12 +313,52 @@ function deleteWaypoint() {
 
     waypoints.splice(selectedIndex, 1);
     setStoredWaypoints(waypoints);
-    alert(`Waypoint "${selected.name}" deleted.`);
+    showToast(`Deleted "${selected.name}".`, "ok");
 }
 
 function centerOnMarker() {
-    if (!map || lat === null || lon === null) return;
+    if (!map || lat === null || lon === null) {
+        showToast("No waypoint to center on.", "error");
+        return;
+    }
     map.setView([lat, lon], map.getZoom());
+}
+
+function startCalibration() {
+    // TODO: implement calibration start (BLE command, UI switch, etc.)
+    // Example idea: send a BLE command "CAL_START\n"
+}
+
+function stopCalibration() {
+    // TODO: implement calibration stop (BLE command, UI switch, etc.)
+    // Example idea: send a BLE command "CAL_STOP\n"
+}
+
+function updateCalibrationButtonUi() {
+    const btn = qs("#btnToggleCalibrate");
+    const title = qs("#calibrateBtnTitle");
+    const desc = qs("#calibrateBtnDesc");
+
+    if (!btn || !title || !desc) return;
+
+    btn.setAttribute("aria-pressed", calibrating ? "true" : "false");
+    title.textContent = calibrating ? "Stop" : "Calibrate";
+    desc.textContent = calibrating ? "Calibration running — click to stop" : "Start/stop calibration mode";
+}
+
+function toggleCalibration() {
+    calibrating = !calibrating;
+
+    if (calibrating) {
+        startCalibration();
+        showToast("Calibration started.", "ok");
+    } else {
+        stopCalibration();
+        showToast("Calibration stopped.", "ok");
+    }
+
+    updateCalibrationButtonUi();
+    setStatusLine();
 }
 
 function initUi() {
@@ -318,15 +385,18 @@ function initUi() {
     });
 
     qs("#btnConnectBle").addEventListener("click", connectBLE);
+    qs("#btnToggleCalibrate").addEventListener("click", toggleCalibration);
+
+    // Map actions (waypoints live here now)
     qs("#btnSendWaypoint").addEventListener("click", sendWaypoint);
     qs("#btnSaveWaypoint").addEventListener("click", saveWaypoint);
     qs("#btnLoadWaypoint").addEventListener("click", loadWaypoint);
     qs("#btnRenameWaypoint").addEventListener("click", renameWaypoint);
     qs("#btnDeleteWaypoint").addEventListener("click", deleteWaypoint);
-
     btnCenterMarker.addEventListener("click", centerOnMarker);
 
     // Start on menu
+    updateCalibrationButtonUi();
     showView("#menuView");
     setStatusLine();
 }
