@@ -5,10 +5,6 @@ let lon = null;
 
 const WAYPOINTS_STORAGE_KEY = "betterbike_waypoints_v1";
 
-// BLE
-let device = null;
-let characteristic = null;
-
 // Calibrate toggle (UI + placeholder hooks)
 let calibrating = false;
 
@@ -32,7 +28,7 @@ function showToast(message, kind = "ok", timeoutMs = 2200) {
 }
 
 function setStatusLine() {
-    const bleStatus = characteristic ? "Connected." : "Not connected.";
+    const bleStatus = bleIsConnected() ? "Connected." : "Not connected.";
     const wpStatus = lat !== null && lon !== null
         ? `Waypoint: ${lat.toFixed(6)}, ${lon.toFixed(6)}.`
         : "No waypoint selected.";
@@ -85,34 +81,8 @@ function ensureMapInitialized() {
 
 async function connectBLE() {
     try {
-        device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true
-        });
-
-        const server = await device.gatt.connect();
-
-        // get all services
-        const services = await server.getPrimaryServices();
-
-        for (const service of services) {
-            try {
-                const characteristics = await service.getCharacteristics();
-
-                for (const char of characteristics) {
-                    // first writable
-                    if (char.properties.write || char.properties.writeWithoutResponse) {
-                        characteristic = char;
-                        showToast("BLE connected.", "ok");
-                        setStatusLine();
-                        return;
-                    }
-                }
-            } catch (e) {
-                // ignore and continue scanning other services
-            }
-        }
-
-        showToast("No writable BLE characteristic found.", "error");
+        await bleConnect();
+        showToast("BLE connected.", "ok");
         setStatusLine();
     } catch (e) {
         showToast("BLE error: " + e, "error", 3500);
@@ -121,7 +91,7 @@ async function connectBLE() {
 }
 
 async function sendWaypoint() {
-    if (!characteristic) {
+    if (!bleIsConnected()) {
         showToast("Not connected to BLE.", "error");
         return;
     }
@@ -140,7 +110,7 @@ async function sendWaypoint() {
     view.setFloat64(9, lon, true);
 
     try {
-        await characteristic.writeValue(buffer);
+        await bleSendFrame(buffer);
         showToast("Waypoint sent.", "ok");
     } catch (e) {
         showToast("Send failed: " + e, "error", 3500);
@@ -331,7 +301,7 @@ function centerOnMarker() {
 }
 
 async function startCalibration() {
-    if (!characteristic) {
+    if (!bleIsConnected()) {
         showToast("Not connected to BLE.", "error");
         return;
     }
@@ -342,7 +312,7 @@ async function startCalibration() {
     view.setUint8(0, TYPE_CALIBRATION);
 
     try {
-        await characteristic.writeValue(buffer);
+        await bleSendFrame(buffer);
         showToast("Calibration started.", "ok");
     } catch (e) {
         showToast("Send failed: " + e, "error", 3500);
