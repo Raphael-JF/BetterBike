@@ -53,7 +53,8 @@ uint8_t update_waypoint_bearing() {
 
 uint8_t read_gps_data() {
     while (gpsSerial.available()) {
-        gps.encode(gpsSerial.read());
+        uint8_t c = gpsSerial.read();
+        gps.encode(c);
     }
 
     if(gps.time.isValid() && gps.time.isUpdated() && gps.time.age() < 2000){

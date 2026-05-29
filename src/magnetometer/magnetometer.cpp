@@ -115,9 +115,9 @@ void magnetometer_stream_raw_tick(void) {
     Serial.print("MAG_RAW,");
     Serial.print(now);
     Serial.print(",");
-    Serial.print((int)raw_data.x);
+    Serial.print((int)raw_data.x - magnetometer_compensator.x_offset);
     Serial.print(",");
-    Serial.print((int)raw_data.y);
+    Serial.print((int)raw_data.y - magnetometer_compensator.y_offset);
     Serial.print(",");
     Serial.println((int)raw_data.z);
 }

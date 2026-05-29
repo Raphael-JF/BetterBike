@@ -35,12 +35,13 @@ uint8_t read_bluetooth_data(void) {
                         waypoint_payload_length = 0;
                         break;
                     case BLUETOOTH_FRAME_CALIBRATE:
-                        Serial.println("Received calibrate command");
                         res = BLE_ENTER_CAL;
                         break;
                     case BLUETOOTH_FRAME_STOP_SAVE_CALIBRATE:
-                        Serial.println("Received save calibrate command");
                         res = BLE_SAVE_CAL;
+                        break;
+                    case BLUETOOTH_FRAME_STOP_CALIBRATE:
+                        res = BLE_ENTER_GPS;
                         break;
                     default:
                         continue; // Ignore les octets non reconnus

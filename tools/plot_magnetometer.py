@@ -3,10 +3,8 @@ import argparse
 import sys
 import time
 from collections import deque
-
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-
 try:
     import serial  # pyserial
 except ImportError as e:
@@ -14,7 +12,6 @@ except ImportError as e:
     raise
 
 MAG_PREFIX = "MAG_RAW,"
-
 
 def parse_mag_line(line: str):
     # Expected: MAG_RAW,<ms>,<x>,<y>,<z>
@@ -32,7 +29,6 @@ def parse_mag_line(line: str):
     except ValueError:
         return None
 
-
 def main():
     ap = argparse.ArgumentParser(description="Real-time plot of magnetometer raw Y vs X from serial.")
     ap.add_argument("--port", required=True, help="Serial port (e.g. /dev/ttyUSB0, COM5)")
@@ -48,11 +44,12 @@ def main():
 
     fig, ax = plt.subplots()
     (scat,) = ax.plot([], [], "k.", markersize=2)
-
     ax.set_title("Magnetometer raw: Y vs X")
     ax.set_xlabel("X (raw)")
     ax.set_ylabel("Y (raw)")
     ax.grid(True)
+    # ── CHANGEMENT 1 : ratio 1:1 garanti en permanence ──────────────────────
+    ax.set_aspect("equal", adjustable="box")
 
     last_autoscale = time.time()
 
@@ -62,22 +59,18 @@ def main():
 
     def update(_frame):
         nonlocal last_autoscale
-
         read_any = False
         while True:
             try:
                 raw = ser.readline()
             except serial.SerialException:
                 break
-
             if not raw:
                 break
-
             line = raw.decode("utf-8", errors="ignore")
             parsed = parse_mag_line(line)
             if parsed is None:
                 continue
-
             _ms, x, y, _z = parsed
             xs.append(x)
             ys.append(y)
@@ -89,13 +82,17 @@ def main():
         now = time.time()
         if now - last_autoscale > 1.0 and len(xs) > 10:
             last_autoscale = now
-            ax.relim()
-            ax.autoscale_view()
+            # ── CHANGEMENT 2 : plage identique sur X et Y, centrée sur les données ──
+            cx = (max(xs) + min(xs)) / 2
+            cy = (max(ys) + min(ys)) / 2
+            # demi-étendue = max des deux étendues + marge 10 %
+            half = max(max(xs) - min(xs), max(ys) - min(ys)) / 2 * 1.1 + 1
+            ax.set_xlim(cx - half, cx + half)
+            ax.set_ylim(cy - half, cy + half)
 
         return (scat,)
 
     ani = animation.FuncAnimation(fig, update, init_func=init, interval=30, blit=True)
-
     try:
         plt.show()
     finally:
@@ -103,7 +100,6 @@ def main():
             ser.close()
         except Exception:
             pass
-
 
 if __name__ == "__main__":
     main()

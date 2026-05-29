@@ -38,6 +38,18 @@ uint8_t read_magnetometer_data();
 */
 uint8_t update_magnetometer_bearing();
 
+/*
+*  Enables or disables streaming of raw magnetometer data to the serial port. When enabled, the raw X and Y values will be printed as CSV lines at the interval defined by magnetometer_stream_raw_set_period_ms().
+*/
+void magnetometer_stream_raw_enable(uint8_t enable);
 
+/*
+*  Sets the period for streaming raw magnetometer data to the serial port, in milliseconds.
+*/
+void magnetometer_stream_raw_set_period_ms(uint16_t period_ms);
 
+/*
+* Should be called regularly (e.g. in the main loop) to handle streaming of raw magnetometer data if enabled. It will print a new line with raw X and Y values in CSV format at the defined interval.
+*/
+void magnetometer_stream_raw_tick(void);
 #endif // MAGNETOMETER_H

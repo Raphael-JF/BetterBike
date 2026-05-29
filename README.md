@@ -55,7 +55,7 @@ Le projet est maintenant compatible ESP32 (env `esp32dev`) avec:
 - Si un module sort du 5V logique sur RX/TX ou I2C, utiliser un level shifter pour protéger l'ESP32 (3.3V logique).
 
 
-### Comportement souhaité
+## Comportement souhaité
 
 - Si la position GPS est encore valide, actualiser l'aiguille comme il se doit. Afficher alors la vitesse
 - Si la position GPS devient vieille (> 5 secondes), commencer à faire clignoter le cadran pour indiquer que les données ne sont plus fraîches.
