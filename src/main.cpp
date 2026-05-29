@@ -105,7 +105,7 @@ case GPS_VIEW:
     switch (read_bluetooth_data()) {
         case BLE_NEW_WAYPOINT:
             warn_component(Compass, GPS_CHANGED_WAYPOINT_POSITION);
-            break;
+            return;
         case BLE_ENTER_CAL:
             enter_cal_view();
             return;
