@@ -101,11 +101,12 @@ async function sendWaypoint() {
 
     view.setUint8(0, TYPE_WAYPOINT);
 
-    // little endian = true pour ESP32
+    // little endian = true for ESP32
     view.setFloat64(1, lat, true);
     view.setFloat64(9, lon, true);
 
-    if(!await bleSendFrame(buffer)) {
+    const err = await bleSendFrame(buffer);
+    if (err === 0) {
         showToast("Waypoint sent.", "ok");
     }
 }
@@ -299,20 +300,22 @@ async function startCalibration() {
 
     view.setUint8(0, TYPE_CALIBRATION);
 
-    if (!await bleSendFrame(buffer)) {
+    const err = await bleSendFrame(buffer);
+    if (err === 0) {
         showToast("Calibration started.", "ok");
     }
 }
 
-function stopSaveCalibration() {
+async function stopSaveCalibration() {
     const buffer = new ArrayBuffer(1);
     const view = new DataView(buffer);
 
     view.setUint8(0, TYPE_STOP_SAVE_CALIBRATION);
-    if (!await bleSendFrame(buffer)) {
+
+    const err = await bleSendFrame(buffer);
+    if (err === 0) {
         showToast("Calibration done.", "ok");
     }
-}
 }
 
 function updateCalibrationButtonUi() {
@@ -332,10 +335,8 @@ function toggleCalibration() {
 
     if (calibrating) {
         startCalibration();
-        showToast("Calibration started.", "ok");
     } else {
         stopSaveCalibration();
-        showToast("Calibration stopped.", "ok");
     }
 
     updateCalibrationButtonUi();
@@ -368,7 +369,7 @@ function initUi() {
     qs("#btnConnectBle").addEventListener("click", connectBLE);
     qs("#btnToggleCalibrate").addEventListener("click", toggleCalibration);
 
-    // Map actions 
+    // Map actions
     qs("#btnSendWaypoint").addEventListener("click", sendWaypoint);
     qs("#btnSaveWaypoint").addEventListener("click", saveWaypoint);
     qs("#btnLoadWaypoint").addEventListener("click", loadWaypoint);
