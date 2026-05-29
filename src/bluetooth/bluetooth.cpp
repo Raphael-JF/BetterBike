@@ -33,16 +33,17 @@ uint8_t read_bluetooth_data(void) {
                     case BLUETOOTH_FRAME_WAYPOINT:
                         state = FRAME_STATE_WAYPOINT_PAYLOAD;
                         waypoint_payload_length = 0;
+                        break;
                     case BLUETOOTH_FRAME_CALIBRATE:
-                        return BLE_ENTER_CAL;
+                        Serial.println("Received calibrate command");
+                        res = BLE_ENTER_CAL;
+                        break;
                     case BLUETOOTH_FRAME_STOP_SAVE_CALIBRATE:
-                        return BLE_SAVE_CAL;
+                        Serial.println("Received save calibrate command");
+                        res = BLE_SAVE_CAL;
+                        break;
                     default:
                         continue; // Ignore les octets non reconnus
-                }
-                if (byte == BLUETOOTH_FRAME_WAYPOINT) {
-                } else if (byte == BLUETOOTH_FRAME_CALIBRATE) {
-                    return BLE_ENTER_CAL;
                 }
                 break;
 
@@ -70,5 +71,5 @@ uint8_t read_bluetooth_data(void) {
         }
 
     } 
-    return BLE_NONE;
+    return res;
 }

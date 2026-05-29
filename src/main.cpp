@@ -54,8 +54,9 @@ void setup() {
     
 
     // charger la vue par défaut (inclut l'initialisation des composants, dont la boussole)
-    enter_cal_view();
+    enter_gps_view();
 }
+
 
 
 
