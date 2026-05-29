@@ -29,9 +29,18 @@ uint8_t read_bluetooth_data(void) {
         switch (state) {
 
             case FRAME_STATE_IDLE:
+                switch (byte) {
+                    case BLUETOOTH_FRAME_WAYPOINT:
+                        state = FRAME_STATE_WAYPOINT_PAYLOAD;
+                        waypoint_payload_length = 0;
+                    case BLUETOOTH_FRAME_CALIBRATE:
+                        return BLE_ENTER_CAL;
+                    case BLUETOOTH_FRAME_STOP_SAVE_CALIBRATE:
+                        return BLE_SAVE_CAL;
+                    default:
+                        continue; // Ignore les octets non reconnus
+                }
                 if (byte == BLUETOOTH_FRAME_WAYPOINT) {
-                    state = FRAME_STATE_WAYPOINT_PAYLOAD;
-                    waypoint_payload_length = 0;
                 } else if (byte == BLUETOOTH_FRAME_CALIBRATE) {
                     return BLE_ENTER_CAL;
                 }

@@ -302,9 +302,11 @@ async function startCalibration() {
     showToast("Calibration started.", "ok");
 }
 
-function stopCalibration() {
-    // TODO: implement calibration stop (BLE command, UI switch, etc.)
-    // Example idea: send a BLE command "CAL_STOP\n"
+function stopSaveCalibration() {
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+
+    view.setUint8(0, TYPE_STOP_SAVE_CALIBRATION);
 }
 
 function updateCalibrationButtonUi() {
@@ -326,7 +328,7 @@ function toggleCalibration() {
         startCalibration();
         showToast("Calibration started.", "ok");
     } else {
-        stopCalibration();
+        stopSaveCalibration();
         showToast("Calibration stopped.", "ok");
     }
 
