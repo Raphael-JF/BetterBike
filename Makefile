@@ -21,6 +21,10 @@ run:
 	pio run -t upload --upload-port $(PORT)
 	pio device monitor --port $(PORT)
 
+# live plot of magnetometer raw data (uses tools/plot_magnetometer.py)
+plot-mag:
+	python3 tools/plot_magnetometer.py --port $(PORT)
+
 # clean
 clean:
 	pio run -t clean
