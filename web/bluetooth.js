@@ -50,12 +50,14 @@ async function bleConnect() {
 async function bleSendFrame(buffer) {
     if (!bleIsConnected()) {
         showToast("Not connected to BLE.", "error");
-        return;
+        return 1;
     }
     try {
         await bleCharacteristic.writeValue(buffer);
+        return 0;
     } catch (e) {
         showToast("Send failed: " + e, "error", 3500);
+        return 1;
     }
 }
 

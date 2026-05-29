@@ -105,8 +105,9 @@ async function sendWaypoint() {
     view.setFloat64(1, lat, true);
     view.setFloat64(9, lon, true);
 
-    await bleSendFrame(buffer);
-    showToast("Waypoint sent.", "ok");
+    if(!await bleSendFrame(buffer)) {
+        showToast("Waypoint sent.", "ok");
+    }
 }
 
 function getStoredWaypoints() {
@@ -298,8 +299,9 @@ async function startCalibration() {
 
     view.setUint8(0, TYPE_CALIBRATION);
 
-    bleSendFrame(buffer);
-    showToast("Calibration started.", "ok");
+    if (!await bleSendFrame(buffer)) {
+        showToast("Calibration started.", "ok");
+    }
 }
 
 function stopSaveCalibration() {
@@ -307,6 +309,10 @@ function stopSaveCalibration() {
     const view = new DataView(buffer);
 
     view.setUint8(0, TYPE_STOP_SAVE_CALIBRATION);
+    if (!await bleSendFrame(buffer)) {
+        showToast("Calibration done.", "ok");
+    }
+}
 }
 
 function updateCalibrationButtonUi() {
