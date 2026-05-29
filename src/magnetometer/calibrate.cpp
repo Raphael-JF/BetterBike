@@ -6,6 +6,10 @@
 #include "calibrate.h"
 #include <cstdint>
 
+#if defined(ESP32)
+#include <Preferences.h>
+#endif
+
 /** @brief Minimum detected value on the X axis (raw) */
 int16_t x_min;
 
@@ -56,4 +60,21 @@ void magnetometer_calibrate_reset(){
 void magnetometer_calibrate_compute_offsets(){
     magnetometer_compensator.x_offset = ((uint32_t)x_max + (uint32_t)x_min) / 2UL;
     magnetometer_compensator.y_offset = ((uint32_t)y_max + (uint32_t)y_min) / 2UL;
+
+#if defined(ESP32)
+    Preferences prefs;
+    if (!prefs.begin("mag", false)) {
+        Serial.println("Magnetometer: failed to open Preferences for writing (namespace 'mag')");
+        return;
+    }
+
+    prefs.putInt("x_off", (int32_t)magnetometer_compensator.x_offset);
+    prefs.putInt("y_off", (int32_t)magnetometer_compensator.y_offset);
+    prefs.end();
+
+    Serial.print("Magnetometer: saved offsets to flash: x_off=");
+    Serial.print((int)magnetometer_compensator.x_offset);
+    Serial.print(" y_off=");
+    Serial.println((int)magnetometer_compensator.y_offset);
+#endif
 }
