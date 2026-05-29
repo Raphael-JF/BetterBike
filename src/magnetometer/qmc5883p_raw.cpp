@@ -21,7 +21,6 @@ TwoWire *qmc5883p_wire;
 /** @brief Raw magnetometer sensor readings (X, Y, Z axes) */
 struct magnetometer_data raw_data;
 
-
 /**
  * @brief Write a single register value to the QMC5883P sensor.
  * @param[in] reg Register address to write to
@@ -29,7 +28,7 @@ struct magnetometer_data raw_data;
  * @return true if write succeeded, false if I2C error or uninitialized
  * @note For internal use only. Requires qmc5883p_begin() to be called first.
  */
-bool write_register( uint8_t reg, uint8_t value)
+bool write_register(uint8_t reg, uint8_t value)
 {
     if (qmc5883p_wire == nullptr) {
         return false;
@@ -74,7 +73,7 @@ int read_register(uint8_t reg)
  * @return true if read succeeded, false on I2C error or uninitialized
  * @note For internal use only. Requires qmc5883p_begin() to be called first.
  */
-bool read_registers( uint8_t reg, uint8_t *buffer, size_t len)
+bool read_registers(uint8_t reg, uint8_t *buffer, size_t len)
 {
     if (qmc5883p_wire == nullptr || buffer == nullptr || len == 0) {
         return false;
@@ -86,9 +85,8 @@ bool read_registers( uint8_t reg, uint8_t *buffer, size_t len)
         return false;
     }
 
-    // size_t count = qmc5883p_wire->requestFrom((int)QMC5883P_SLAVE_ADDRESS, (int)len);
     size_t count = qmc5883p_wire->requestFrom(QMC5883P_SLAVE_ADDRESS, len);
-    
+
     if (count != len) {
         return false;
     }
@@ -100,7 +98,6 @@ bool read_registers( uint8_t reg, uint8_t *buffer, size_t len)
         buffer[i] = (uint8_t)qmc5883p_wire->read();
     }
     return true;
-
 }
 
 /**
@@ -110,9 +107,9 @@ bool read_registers( uint8_t reg, uint8_t *buffer, size_t len)
  * @return true if sensor responds to queries, false on error
  * @note Must be called before any other sensor operations
  */
-bool qmc5883p_begin( TwoWire *wire, uint8_t address)
+bool qmc5883p_begin(TwoWire *wire, uint8_t address)
 {
-    
+    (void)address;
 
     if (wire == nullptr) {
         return false;
@@ -156,7 +153,7 @@ bool qmc5883p_configure()
 
 /**
  * @brief Read raw sensor data from QMC5883P.
- * @details Checks data-ready flag, reads all 6 bytes (X, Y, Z LSB/MSB), 
+ * @details Checks data-ready flag, reads all 6 bytes (X, Y, Z LSB/MSB),
  * and converts to int16_t values. Updates global raw_data structure.
  * Overflow flag is checked but not stored (data remains valid on overflow).
  * @return true if data was successfully read and is ready, false if not ready or I2C error
@@ -164,13 +161,14 @@ bool qmc5883p_configure()
  */
 bool qmc5883p_read_raw()
 {
-
     const int status = read_register(REG_STATUS);
     if (status < 0) {
         return false;
     }
 
     uint8_t overflow = ((status & (1u << 1)) != 0u);
+    (void)overflow;
+
     if ((status & 0x01u) == 0u) {
         return false;
     }
@@ -180,15 +178,17 @@ bool qmc5883p_read_raw()
         return false;
     }
 
+    int16_t raw_x_before = raw_data.x;
+    int16_t raw_y_before = raw_data.y;
+    int16_t raw_z_before = raw_data.z;
+    (void)raw_z_before;
 
-    uint16_t raw_x_before = raw_data.x;
-    uint16_t raw_y_before = raw_data.y;
-    uint16_t raw_z_before = raw_data.z;
     raw_data.x = (int16_t)(((uint16_t)buffer[1] << 8) | buffer[0]);
     raw_data.y = (int16_t)(((uint16_t)buffer[3] << 8) | buffer[2]);
     raw_data.z = (int16_t)(((uint16_t)buffer[5] << 8) | buffer[4]);
 
-    if(fabs(raw_data.x - raw_x_before) < 10 && abs(raw_data.y - raw_y_before) < 10){
+    // Simple noise gate: only report "changed" when x/y moved meaningfully.
+    if (fabs((double)(raw_data.x - raw_x_before)) < 10.0 && fabs((double)(raw_data.y - raw_y_before)) < 10.0) {
         return false;
     }
 
@@ -217,7 +217,7 @@ double qmc5883p_compute_heading_radians()
 
 /**
  * @brief Compute magnetic heading from raw data in degrees.
- * @details Calls qmc5883p_compute_heading_radians() and converts result 
+ * @details Calls qmc5883p_compute_heading_radians() and converts result
  * from radians to degrees (rad * 180 / π).
  * @return Heading in degrees (0-360): 0=North, 90=East, 180=South, 270=West
  * @note Requires raw_data with calibration offsets already applied

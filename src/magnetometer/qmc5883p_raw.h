@@ -22,14 +22,11 @@
 /** @brief Register address for control command 2 */
 #define REG_CMD2 (0x0B)
 
-
-
 struct magnetometer_data {
     int16_t x;
     int16_t y;
     int16_t z;
 };
-
 
 /**
  * @brief Magnetic declination correction in radians.
@@ -71,7 +68,6 @@ bool qmc5883p_configure(void);
  * @return true if data was successfully read and is ready, false if not ready or I2C error.
  */
 bool qmc5883p_read_raw(void);
-
 
 /**
  * @brief Compute magnetic heading in radians.
