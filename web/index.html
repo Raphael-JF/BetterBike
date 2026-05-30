@@ -115,6 +115,33 @@
                     </div>
                 </div>
             </section>
+
+            <section id="calibrationView" class="view" aria-label="Calibration view">
+                <div id="calibrationViewWrap">
+                    <div id="calibrationGraph"></div>
+
+                    <div id="panel">
+                        <div class="panelActions">
+                            <button id="btnBackToMenu" type="button">Back</button>
+                            <button id="btnCenterMarker" type="button">Center</button>
+                            <button id="btnSendWaypoint" type="button">Send</button>
+                        </div>
+
+                        <div class="panelDivider" role="separator" aria-hidden="true"></div>
+
+                        <div class="panelActions panelActionsWrap">
+                            <button id="btnSaveWaypoint" type="button">Save</button>
+                            <button id="btnLoadWaypoint" type="button">Load</button>
+                            <button id="btnRenameWaypoint" type="button">Rename</button>
+                            <button id="btnDeleteWaypoint" type="button" class="danger">Delete</button>
+                        </div>
+
+                        <div class="panelHint" id="mapHint" aria-live="polite">
+                            Tip: click on the map to select a waypoint.
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <div id="toastHost" aria-live="polite" aria-atomic="true"></div>
