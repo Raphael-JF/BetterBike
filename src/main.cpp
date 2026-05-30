@@ -20,6 +20,9 @@
 #include "utils/component.h"
 #include "utils/blinking.h"
 
+static bool web_cal_stream_enabled = false;
+static unsigned long last_comp_notify_ms = 0;
+
 void setup() {
     Serial.begin(115200);
 
@@ -36,8 +39,8 @@ void setup() {
     }
     // lcd.noBacklight();
 
-    // initialiser l'advertising Bluetooth
-    ble.begin("VeloGPS");
+    // init BLE (NimBLE-Arduino custom service)
+    bluetooth_init("VeloGPS");
 
     // initialiser le magnétomètre
     if (!init_magnetometer()) {
@@ -64,21 +67,43 @@ void loop() {
         case CALIBRATION_VIEW:
             if (read_magnetometer_data()) {
                 set_flag(cal_view_flags, CAL_CHANGED_MAGNETOMETER_RAW_DATA);
+
+                // Stream calibration points only when calibration UI mode is active (entered via BLE)
+                // We don't have direct access to raw values here without touching read-only files,
+                // so we only stream a compensator snapshot periodically. Calibration points should be
+                // sent from wherever raw points are available; see note below.
             }
+
             // if a communication is received via Bluetooth
             switch (read_bluetooth_data()) {
                 case BLE_ENTER_CAL:
+                    web_cal_stream_enabled = true;
                     enter_cal_view();
                     return;
                 case BLE_ENTER_GPS:
+                    web_cal_stream_enabled = false;
                     enter_gps_view();
                     return;
                 case BLE_SAVE_CAL:
                     magnetometer_calibrate_compute_offsets();
+                    web_cal_stream_enabled = false;
                     enter_gps_view();
                     return;
                 default:
                     break;
+            }
+
+            if (web_cal_stream_enabled) {
+                unsigned long now = millis();
+                if (now - last_comp_notify_ms >= 250) {
+                    last_comp_notify_ms = now;
+
+                    // Without editing read-only magnetometer headers, we cannot reliably read the
+                    // current compensator values here. For now, send placeholders (0,0).
+                    // Once you add the file that exposes the current magnetometer_compensator instance,
+                    // we’ll wire real values.
+                    bluetooth_notify_compensator(0, 0);
+                }
             }
 
             update_cal_view();
@@ -102,6 +127,7 @@ void loop() {
                     warn_component(Compass, GPS_CHANGED_WAYPOINT_POSITION);
                     return;
                 case BLE_ENTER_CAL:
+                    web_cal_stream_enabled = true;
                     enter_cal_view();
                     return;
                 default:

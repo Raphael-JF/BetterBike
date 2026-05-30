@@ -60,7 +60,7 @@
                         </span>
                     </button>
 
-                    <button id="btnToggleCalibrate" class="menuBtn" type="button" aria-pressed="false">
+                    <button id="btnOpenCalibration" class="menuBtn" type="button">
                         <span class="menuBtnIcon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 2v4"></path>
@@ -75,8 +75,8 @@
                             </svg>
                         </span>
                         <span class="menuBtnText">
-                            <span class="menuBtnTitle" id="calibrateBtnTitle">Calibrate</span>
-                            <span class="menuBtnDesc" id="calibrateBtnDesc">Start/stop calibration mode</span>
+                            <span class="menuBtnTitle">Calibration</span>
+                            <span class="menuBtnDesc">Live scatter + start/stop calibration</span>
                         </span>
                     </button>
 
@@ -118,26 +118,22 @@
 
             <section id="calibrationView" class="view" aria-label="Calibration view">
                 <div id="calibrationViewWrap">
-                    <div id="calibrationGraph"></div>
+                    <canvas id="calibrationCanvas" width="900" height="520"></canvas>
 
                     <div id="panel">
+                        <div class="coords">
+                            <div>Comp X offset: <span id="compX">-</span></div>
+                            <div>Comp Y offset: <span id="compY">-</span></div>
+                        </div>
+
                         <div class="panelActions">
-                            <button id="btnBackToMenu" type="button">Back</button>
-                            <button id="btnCenterMarker" type="button">Center</button>
-                            <button id="btnSendWaypoint" type="button">Send</button>
+                            <button id="btnBackToMenuCal" type="button">Back</button>
+                            <button id="btnToggleCalibrateLive" type="button" aria-pressed="false">Start calibration</button>
+                            <button id="btnClearCalPlot" type="button">Clear</button>
                         </div>
 
-                        <div class="panelDivider" role="separator" aria-hidden="true"></div>
-
-                        <div class="panelActions panelActionsWrap">
-                            <button id="btnSaveWaypoint" type="button">Save</button>
-                            <button id="btnLoadWaypoint" type="button">Load</button>
-                            <button id="btnRenameWaypoint" type="button">Rename</button>
-                            <button id="btnDeleteWaypoint" type="button" class="danger">Delete</button>
-                        </div>
-
-                        <div class="panelHint" id="mapHint" aria-live="polite">
-                            Tip: click on the map to select a waypoint.
+                        <div class="panelHint" aria-live="polite">
+                            Live magnetometer scatter from the bike (BLE notifications).
                         </div>
                     </div>
                 </div>

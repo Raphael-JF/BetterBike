@@ -5,8 +5,12 @@ let lon = null;
 
 const WAYPOINTS_STORAGE_KEY = "betterbike_waypoints_v1";
 
-// Calibrate toggle (UI + placeholder hooks)
+// Calibration UI state
 let calibrating = false;
+
+// Live calibration plot state
+let calPoints = [];
+let calMaxPoints = 2000;
 
 function qs(sel) {
     return document.querySelector(sel);
@@ -41,9 +45,11 @@ function setStatusLine() {
 function showView(viewId) {
     const menuView = qs("#menuView");
     const mapView = qs("#mapView");
+    const calibrationView = qs("#calibrationView");
 
     menuView.classList.remove("viewActive");
     mapView.classList.remove("viewActive");
+    calibrationView.classList.remove("viewActive");
 
     qs(viewId).classList.add("viewActive");
 }
@@ -79,9 +85,151 @@ function ensureMapInitialized() {
     setTimeout(() => map.invalidateSize(), 0);
 }
 
+function getCanvasCtx() {
+    const canvas = qs("#calibrationCanvas");
+    if (!canvas) return null;
+    const ctx = canvas.getContext("2d");
+    return ctx;
+}
+
+function resizeCalibrationCanvasToCssPixels() {
+    const canvas = qs("#calibrationCanvas");
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+
+    const cssW = canvas.clientWidth || 900;
+    const cssH = canvas.clientHeight || 520;
+
+    const pxW = Math.max(1, Math.floor(cssW * dpr));
+    const pxH = Math.max(1, Math.floor(cssH * dpr));
+
+    if (canvas.width !== pxW || canvas.height !== pxH) {
+        canvas.width = pxW;
+        canvas.height = pxH;
+    }
+}
+
+function drawCalibrationScatter() {
+    const canvas = qs("#calibrationCanvas");
+    const ctx = getCanvasCtx();
+    if (!canvas || !ctx) return;
+
+    resizeCalibrationCanvasToCssPixels();
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Background grid
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1;
+
+    const gridStep = Math.floor(Math.min(w, h) / 10);
+    for (let x = 0; x <= w; x += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    if (calPoints.length === 0) {
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.font = "16px system-ui, sans-serif";
+        ctx.fillText("No calibration points yet.", 18, 28);
+        ctx.restore();
+        return;
+    }
+
+    // Scale points to fit, using max abs on x/y
+    let maxAbs = 1;
+    for (const p of calPoints) {
+        maxAbs = Math.max(maxAbs, Math.abs(p.x), Math.abs(p.y));
+    }
+
+    const pad = 18;
+    const cx = w / 2;
+    const cy = h / 2;
+    const scale = (Math.min(w, h) / 2 - pad) / maxAbs;
+
+    // Axes
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx, pad);
+    ctx.lineTo(cx, h - pad);
+    ctx.moveTo(pad, cy);
+    ctx.lineTo(w - pad, cy);
+    ctx.stroke();
+    ctx.restore();
+
+    // Points
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 209, 255, 0.75)";
+    for (const p of calPoints) {
+        const px = cx + p.x * scale;
+        const py = cy - p.y * scale;
+
+        // skip if out of bounds
+        if (px < 0 || px > w || py < 0 || py > h) continue;
+
+        ctx.fillRect(px, py, 2, 2);
+    }
+    ctx.restore();
+}
+
+function updateCompensatorUi(xOff, yOff) {
+    const xEl = qs("#compX");
+    const yEl = qs("#compY");
+    if (xEl) xEl.textContent = String(xOff);
+    if (yEl) yEl.textContent = String(yOff);
+}
+
+function handleBleNotificationBytes(bytes) {
+    if (!(bytes instanceof Uint8Array) || bytes.length < 1) return;
+
+    const type = bytes[0];
+
+    if (type === TYPE_TX_CAL_POINT) {
+        if (bytes.length < 7) return;
+        const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const x = dv.getInt16(1, true);
+        const y = dv.getInt16(3, true);
+        const z = dv.getInt16(5, true);
+
+        calPoints.push({ x, y, z, t: Date.now() });
+        if (calPoints.length > calMaxPoints) {
+            calPoints.splice(0, calPoints.length - calMaxPoints);
+        }
+        drawCalibrationScatter();
+        return;
+    }
+
+    if (type === TYPE_TX_COMPENSATOR) {
+        if (bytes.length < 5) return;
+        const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const xOff = dv.getInt16(1, true);
+        const yOff = dv.getInt16(3, true);
+        updateCompensatorUi(xOff, yOff);
+        return;
+    }
+}
+
 async function connectBLE() {
     try {
         await bleConnect();
+        bleSubscribeNotifications(handleBleNotificationBytes);
         showToast("BLE connected.", "ok");
         setStatusLine();
     } catch (e) {
@@ -319,18 +467,13 @@ async function stopSaveCalibration() {
 }
 
 function updateCalibrationButtonUi() {
-    const btn = qs("#btnToggleCalibrate");
-    const title = qs("#calibrateBtnTitle");
-    const desc = qs("#calibrateBtnDesc");
-
-    if (!btn || !title || !desc) return;
-
+    const btn = qs("#btnToggleCalibrateLive");
+    if (!btn) return;
     btn.setAttribute("aria-pressed", calibrating ? "true" : "false");
-    title.textContent = calibrating ? "Stop" : "Calibrate";
-    desc.textContent = calibrating ? "Calibration running — click to stop" : "Start/stop calibration mode";
+    btn.textContent = calibrating ? "Stop calibration" : "Start calibration";
 }
 
-function toggleCalibration() {
+function toggleCalibrationLive() {
     calibrating = !calibrating;
 
     if (calibrating) {
@@ -343,11 +486,17 @@ function toggleCalibration() {
     setStatusLine();
 }
 
+function clearCalibrationPlot() {
+    calPoints = [];
+    drawCalibrationScatter();
+}
+
 function initUi() {
     const btnGoMenu = qs("#btnGoMenu");
     const btnBackToMenu = qs("#btnBackToMenu");
     const btnOpenMap = qs("#btnOpenMap");
     const btnCenterMarker = qs("#btnCenterMarker");
+    const btnOpenCalibration = qs("#btnOpenCalibration");
 
     btnGoMenu.addEventListener("click", () => {
         showView("#menuView");
@@ -366,8 +515,14 @@ function initUi() {
         setStatusLine();
     });
 
+    btnOpenCalibration.addEventListener("click", () => {
+        showView("#calibrationView");
+        // draw once
+        drawCalibrationScatter();
+        setStatusLine();
+    });
+
     qs("#btnConnectBle").addEventListener("click", connectBLE);
-    qs("#btnToggleCalibrate").addEventListener("click", toggleCalibration);
 
     // Map actions
     qs("#btnSendWaypoint").addEventListener("click", sendWaypoint);
@@ -377,10 +532,24 @@ function initUi() {
     qs("#btnDeleteWaypoint").addEventListener("click", deleteWaypoint);
     btnCenterMarker.addEventListener("click", centerOnMarker);
 
+    // Calibration actions
+    qs("#btnBackToMenuCal").addEventListener("click", () => {
+        showView("#menuView");
+        setStatusLine();
+    });
+    qs("#btnToggleCalibrateLive").addEventListener("click", toggleCalibrationLive);
+    qs("#btnClearCalPlot").addEventListener("click", clearCalibrationPlot);
+
     // Start on menu
     updateCalibrationButtonUi();
     showView("#menuView");
     setStatusLine();
+
+    window.addEventListener("resize", () => {
+        if (qs("#calibrationView").classList.contains("viewActive")) {
+            drawCalibrationScatter();
+        }
+    });
 }
 
 document.addEventListener("DOMContentLoaded", initUi);
