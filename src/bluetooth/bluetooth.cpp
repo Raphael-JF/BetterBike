@@ -86,11 +86,16 @@ void bluetooth_init(const char* deviceName) {
         NIMBLE_PROPERTY::NOTIFY
     );
 
-    service->start();
+    // Note:
+    // NimBLE-Arduino starts services implicitly when the server is running/advertising.
+    // NimBLEService::start() is deprecated and has no effect in current versions.
 
     NimBLEAdvertising* advertising = NimBLEDevice::getAdvertising();
     advertising->addServiceUUID(BLUETOOTH_SERVICE_UUID);
-    advertising->setScanResponse(true);
+
+    // We intentionally do NOT call advertising->setScanResponse(true) because it is not
+    // available in all NimBLE-Arduino versions. Advertising the service UUID is enough
+    // for Web Bluetooth filters.
     advertising->start();
 }
 
