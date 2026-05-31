@@ -110,14 +110,4 @@ void magnetometer_stream_raw_tick(void) {
     if (!read_magnetometer_data()) {
         return;
     }
-
-    // Output format: MAG_RAW,<ms>,<x>,<y>,<z>
-    Serial.print("MAG_RAW,");
-    Serial.print(now);
-    Serial.print(",");
-    Serial.print((int)raw_data.x - magnetometer_compensator.x_offset);
-    Serial.print(",");
-    Serial.print((int)raw_data.y - magnetometer_compensator.y_offset);
-    Serial.print(",");
-    Serial.println((int)raw_data.z);
 }

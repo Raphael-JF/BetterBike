@@ -202,6 +202,7 @@ function handleBleNotificationBytes(bytes) {
     const type = bytes[0];
 
     if (type === TYPE_TX_CAL_POINT) {
+        console.log("Received calibration point:", bytes);
         if (bytes.length < 7) return;
         const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         const x = dv.getInt16(1, true);

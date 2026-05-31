@@ -187,7 +187,7 @@ void bluetooth_notify_calibration_point(int16_t x, int16_t y, int16_t z) {
 }
 
 void bluetooth_notify_compensator(int16_t x_offset, int16_t y_offset) {
-    uint8_t payload[1 + 2 + 2];
+    uint8_t payload[1 + 2 + 2]; // 1 byte for frame type + 2 bytes for x_offset + 2 bytes for y_offset
     payload[0] = BLUETOOTH_TX_COMPENSATOR;
 
     memcpy(&payload[1], &x_offset, sizeof(int16_t));

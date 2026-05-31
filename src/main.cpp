@@ -80,9 +80,11 @@ void loop() {
                     enter_cal_view();
                     return;
                 case BLE_ENTER_GPS:
+                    bluetooth_notify_compensator(magnetometer_compensator.x_offset, magnetometer_compensator.y_offset);
                     enter_gps_view();
                     return;
                 case BLE_SAVE_CAL:
+                    bluetooth_notify_compensator(magnetometer_compensator.x_offset, magnetometer_compensator.y_offset);
                     magnetometer_calibrate_compute_offsets();
                     enter_gps_view();
                     return;
@@ -100,7 +102,6 @@ void loop() {
                 // we’ll wire real values.
                 Serial.println("Sending calibration data...");
                 bluetooth_notify_calibration_point(raw_data.x, raw_data.y, raw_data.z);
-                bluetooth_notify_compensator(magnetometer_compensator.x_offset, magnetometer_compensator.y_offset);
             }
 
             update_cal_view();
