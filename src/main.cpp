@@ -64,7 +64,7 @@ void loop() {
     //magnetometer_stream_raw_tick();
 
     switch (active_view_idx) {
-        case CALIBRATION_VIEW:
+        case CALIBRATION_VIEW: {
             if (read_magnetometer_data()) {
                 set_flag(cal_view_flags, CAL_CHANGED_MAGNETOMETER_RAW_DATA);
 
@@ -106,8 +106,9 @@ void loop() {
             update_cal_view();
 
             break;
+        }
 
-        case GPS_VIEW:
+        case GPS_VIEW: {
             // if the minutes changed or if the new GPS time data made them change
             if (update_time()) {
                 warn_component(Clock, CHANGED_CURRENT_TIME);
@@ -169,6 +170,7 @@ void loop() {
             }
             update_gps_view();
             break;
+        }
 
         default:
             break;
