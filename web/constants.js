@@ -9,9 +9,14 @@ const TYPE_CALIBRATION = 0x02;
 const TYPE_STOP_SAVE_CALIBRATION = 0x03;
 const TYPE_STOP_CALIBRATION = 0x04;
 
+// New: "Test calibration" mode (independent from calibration)
+const TYPE_TEST_CAL_START = 0x05;
+const TYPE_TEST_CAL_STOP = 0x06;
+
 // Notifications (bike -> web)
 const TYPE_TX_CAL_POINT = 0x11;     // [0x11][int16 x][int16 y][int16 z]
 const TYPE_TX_COMPENSATOR = 0x12;   // [0x12][int16 x_offset][int16 y_offset]
+const TYPE_TX_TEST_POINT = 0x13;    // [0x13][int16 x][int16 y][int16 z] (calibration-applied)
 
 // Must match firmware NimBLE UUIDs in src/bluetooth/bluetooth.h
 const BLE_SERVICE_UUID = "5a7d7c20-2d20-4a66-b52a-8c88c7f823b1";
