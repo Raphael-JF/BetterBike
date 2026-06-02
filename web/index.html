@@ -76,7 +76,7 @@
                         </span>
                         <span class="menuBtnText">
                             <span class="menuBtnTitle">Calibration</span>
-                            <span class="menuBtnDesc">Live scatter + start/stop calibration</span>
+                            <span class="menuBtnDesc">Compute offsets, then test calibration (scatter)</span>
                         </span>
                     </button>
 
@@ -128,12 +128,13 @@
                         <div class="panelActions">
                             <button id="btnBackToMenuCal" type="button">Back</button>
                             <button id="btnToggleCalibrateLive" type="button" aria-pressed="false">Start calibration</button>
+                            <button id="btnToggleTestCalibration" type="button" aria-pressed="false">Start test calibration</button>
                             <button id="btnClearCalPlot" type="button">Clear</button>
                         </div>
 
                         <canvas id="calibrationCanvas" width="900" height="520"></canvas>
                         <div class="panelHint" aria-live="polite">
-                            Live magnetometer scatter from the bike (BLE notifications).
+                            Scatter is disabled by default. Use “Start test calibration” to stream and plot calibration-applied points.
                         </div>
                     </div>
                 </div>

@@ -11,11 +11,16 @@
 #define BLUETOOTH_FRAME_STOP_SAVE_CALIBRATE 0x03
 #define BLUETOOTH_FRAME_STOP_CALIBRATE 0x04
 
+// New: "Test calibration" mode (independent from calibration)
+#define BLUETOOTH_FRAME_TEST_CAL_START 0x05
+#define BLUETOOTH_FRAME_TEST_CAL_STOP  0x06
+
 #define BLUETOOTH_WAYPOINT_PAYLOAD_SIZE (sizeof(double) * 2)
 
 // Telemetry frames (bike -> web, notifications)
 #define BLUETOOTH_TX_CAL_POINT      0x11
 #define BLUETOOTH_TX_COMPENSATOR    0x12
+#define BLUETOOTH_TX_TEST_POINT     0x13
 
 // Custom BLE UUIDs (128-bit). Must match web side.
 //
@@ -38,6 +43,8 @@ enum bluetooth_events : uint8_t {
     BLE_ENTER_GPS = 2,
     BLE_ENTER_CAL = 3,
     BLE_SAVE_CAL = 4,
+    BLE_TEST_CAL_START = 5,
+    BLE_TEST_CAL_STOP = 6,
 };
 
 // Initialize BLE GATT service/characteristics.
@@ -49,5 +56,6 @@ uint8_t read_bluetooth_data();
 // Bike -> web notifications
 void bluetooth_notify_calibration_point(int16_t x, int16_t y, int16_t z);
 void bluetooth_notify_compensator(int16_t x_offset, int16_t y_offset);
+void bluetooth_notify_test_point(int16_t x, int16_t y, int16_t z);
 
 #endif // BLUETOOTH_H

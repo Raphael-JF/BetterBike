@@ -137,6 +137,12 @@ uint8_t read_bluetooth_data(void) {
                     case BLUETOOTH_FRAME_STOP_CALIBRATE:
                         res = BLE_ENTER_GPS;
                         break;
+                    case BLUETOOTH_FRAME_TEST_CAL_START:
+                        res = BLE_TEST_CAL_START;
+                        break;
+                    case BLUETOOTH_FRAME_TEST_CAL_STOP:
+                        res = BLE_TEST_CAL_STOP;
+                        break;
                     default:
                         continue; // Ignore unrecognized bytes
                 }
@@ -192,6 +198,17 @@ void bluetooth_notify_compensator(int16_t x_offset, int16_t y_offset) {
 
     memcpy(&payload[1], &x_offset, sizeof(int16_t));
     memcpy(&payload[3], &y_offset, sizeof(int16_t));
+
+    notify_bytes(payload, sizeof(payload));
+}
+
+void bluetooth_notify_test_point(int16_t x, int16_t y, int16_t z) {
+    uint8_t payload[1 + 2 + 2 + 2];
+    payload[0] = BLUETOOTH_TX_TEST_POINT;
+
+    memcpy(&payload[1], &x, sizeof(int16_t));
+    memcpy(&payload[3], &y, sizeof(int16_t));
+    memcpy(&payload[5], &z, sizeof(int16_t));
 
     notify_bytes(payload, sizeof(payload));
 }

@@ -22,6 +22,7 @@
 #include "utils/blinking.h"
 
 static unsigned long last_comp_notify_ms = 0;
+static uint8_t test_cal_active = 0;
 
 void setup() {
     Serial.begin(115200);
@@ -68,10 +69,16 @@ void loop() {
             if (read_magnetometer_data()) {
                 set_flag(cal_view_flags, CAL_CHANGED_MAGNETOMETER_RAW_DATA);
 
-                // Stream calibration points only when calibration UI mode is active (entered via BLE)
-                // We don't have direct access to raw values here without touching read-only files,
-                // so we only stream a compensator snapshot periodically. Calibration points should be
-                // sent from wherever raw points are available; see note below.
+                // Calibration phase: still stream raw points (used to compute offsets / visualize raw if desired).
+                bluetooth_notify_calibration_point(raw_data.x, raw_data.y, raw_data.z);
+
+                // Test calibration phase: stream calibration-applied points (offsets applied).
+                if (test_cal_active) {
+                    int16_t cx = (int16_t)(raw_data.x - magnetometer_compensator.x_offset);
+                    int16_t cy = (int16_t)(raw_data.y - magnetometer_compensator.y_offset);
+                    int16_t cz = raw_data.z;
+                    bluetooth_notify_test_point(cx, cy, cz);
+                }
             }
 
             // if a communication is received via Bluetooth
@@ -79,15 +86,29 @@ void loop() {
                 case BLE_ENTER_CAL:
                     enter_cal_view();
                     return;
+
                 case BLE_ENTER_GPS:
+                    test_cal_active = 0;
                     bluetooth_notify_compensator(magnetometer_compensator.x_offset, magnetometer_compensator.y_offset);
                     enter_gps_view();
                     return;
+
                 case BLE_SAVE_CAL:
+                    test_cal_active = 0;
                     bluetooth_notify_compensator(magnetometer_compensator.x_offset, magnetometer_compensator.y_offset);
                     magnetometer_calibrate_compute_offsets();
                     enter_gps_view();
                     return;
+
+                case BLE_TEST_CAL_START:
+                    test_cal_active = 1;
+                    bluetooth_notify_compensator(magnetometer_compensator.x_offset, magnetometer_compensator.y_offset);
+                    return;
+
+                case BLE_TEST_CAL_STOP:
+                    test_cal_active = 0;
+                    return;
+
                 default:
                     break;
             }
@@ -95,13 +116,7 @@ void loop() {
             unsigned long now = millis();
             if (now - last_comp_notify_ms >= 250) {
                 last_comp_notify_ms = now;
-
-                // Without editing read-only magnetometer headers, we cannot reliably read the
-                // current compensator values here. For now, send placeholders (0,0).
-                // Once you add the file that exposes the current magnetometer_compensator instance,
-                // we’ll wire real values.
-                Serial.println("Sending calibration data...");
-                bluetooth_notify_calibration_point(raw_data.x, raw_data.y, raw_data.z);
+                bluetooth_notify_compensator(magnetometer_compensator.x_offset, magnetometer_compensator.y_offset);
             }
 
             update_cal_view();
