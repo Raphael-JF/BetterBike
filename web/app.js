@@ -202,7 +202,7 @@ function handleBleNotificationBytes(bytes) {
     const type = bytes[0];
 
     if (type === TYPE_TX_CAL_POINT) {
-        console.log("Received calibration point:", bytes);
+        if(!calibrating) return;
         if (bytes.length < 7) return;
         const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         const x = dv.getInt16(1, true);
@@ -467,6 +467,18 @@ async function stopSaveCalibration() {
     }
 }
 
+async function stopDiscardCalibration() {
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+    
+    view.setUint8(0, TYPE_STOP_DISCARD_CALIBRATION);
+    
+    const err = await bleSendFrame(buffer);
+    if (err === 0) {
+        showToast("Calibration discarded.", "ok");
+    }
+}
+
 function updateCalibrationButtonUi() {
     const btn = qs("#btnToggleCalibrateLive");
     if (!btn) return;
@@ -480,9 +492,20 @@ function toggleCalibrationLive() {
     if (calibrating) {
         startCalibration();
     } else {
+        clearCalibrationPlot();
         stopSaveCalibration();
     }
 
+    updateCalibrationButtonUi();
+    setStatusLine();
+}
+
+
+function cancelCalibrationLive() {
+    if (!calibrating) return;
+    calibrating = false;
+    stopDiscardCalibration();
+    clearCalibrationPlot();
     updateCalibrationButtonUi();
     setStatusLine();
 }
@@ -535,8 +558,8 @@ function initUi() {
 
     // Calibration actions
     qs("#btnBackToMenuCal").addEventListener("click", () => {
+        cancelCalibrationLive();
         showView("#menuView");
-        setStatusLine();
     });
     qs("#btnToggleCalibrateLive").addEventListener("click", toggleCalibrationLive);
     qs("#btnClearCalPlot").addEventListener("click", clearCalibrationPlot);

@@ -63,6 +63,14 @@ void setup() {
 void loop() {
     // Always tick the raw stream (it rate-limits internally and prints only on new data).
     //magnetometer_stream_raw_tick();
+    
+    // Test calibration phase: stream calibration-applied points (offsets applied).
+    if (test_cal_active) {
+        int16_t cx = (int16_t)(raw_data.x - magnetometer_compensator.x_offset);
+        int16_t cy = (int16_t)(raw_data.y - magnetometer_compensator.y_offset);
+        int16_t cz = raw_data.z;
+        bluetooth_notify_test_point(cx, cy, cz);
+    }
 
     switch (active_view_idx) {
         case CALIBRATION_VIEW: {
@@ -71,16 +79,7 @@ void loop() {
 
                 // Calibration phase: still stream raw points (used to compute offsets / visualize raw if desired).
                 bluetooth_notify_calibration_point(raw_data.x, raw_data.y, raw_data.z);
-
-                // Test calibration phase: stream calibration-applied points (offsets applied).
-                if (test_cal_active) {
-                    int16_t cx = (int16_t)(raw_data.x - magnetometer_compensator.x_offset);
-                    int16_t cy = (int16_t)(raw_data.y - magnetometer_compensator.y_offset);
-                    int16_t cz = raw_data.z;
-                    bluetooth_notify_test_point(cx, cy, cz);
-                }
             }
-
             // if a communication is received via Bluetooth
             switch (read_bluetooth_data()) {
                 case BLE_ENTER_CAL:

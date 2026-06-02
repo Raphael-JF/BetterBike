@@ -7,7 +7,7 @@
 const TYPE_WAYPOINT = 0x01;
 const TYPE_CALIBRATION = 0x02;
 const TYPE_STOP_SAVE_CALIBRATION = 0x03;
-const TYPE_STOP_CALIBRATION = 0x04;
+const TYPE_STOP_DISCARD_CALIBRATION = 0x04;
 
 // New: "Test calibration" mode (independent from calibration)
 const TYPE_TEST_CAL_START = 0x05;
