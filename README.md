@@ -32,6 +32,29 @@ Le projet est maintenant compatible ESP32 (env `esp32dev`) avec:
 - LCD en I2C via `Wire` sur `SDA=21` et `SCL=22`
 - GPS en UART matériel (`Serial1`) sur `RX=GPIO16` et `TX=GPIO17`
 
+## Migration progressive vers ESP-IDF
+
+Une première étape est disponible avec PlatformIO en mode **ESP-IDF + Arduino comme composant**:
+
+- Environnement PlatformIO: `esp32dev-idf`
+- Build:
+
+```bash
+pio run -e esp32dev-idf
+```
+
+- Flash:
+
+```bash
+pio run -e esp32dev-idf -t upload --upload-port /dev/ttyUSB0
+```
+
+Raccourcis Makefile:
+
+- `make build-idf`
+- `make upload-idf PORT=/dev/ttyUSB0`
+- `make run-idf PORT=/dev/ttyUSB0`
+
 ## Branchement (ESP32)
 
 ### LCD RGB (I2C)

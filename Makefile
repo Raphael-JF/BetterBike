@@ -1,14 +1,21 @@
 # ===== CONFIG =====
 BOARD ?= esp32dev
+BOARD_IDF ?= esp32dev-idf
 PORT ?= /dev/ttyUSB0
 
 # ===== COMMANDES =====
 
 build:
-	pio run
+	pio run -e $(BOARD)
+
+build-idf:
+	pio run -e $(BOARD_IDF)
 
 upload:
-	pio run -t upload --upload-port $(PORT)
+	pio run -e $(BOARD) -t upload --upload-port $(PORT)
+
+upload-idf:
+	pio run -e $(BOARD_IDF) -t upload --upload-port $(PORT)
 
 monitor:
 	pio device monitor --port $(PORT)
@@ -18,7 +25,11 @@ flash: upload
 
 # build + flash + monitor
 run:
-	pio run -t upload --upload-port $(PORT)
+	pio run -e $(BOARD) -t upload --upload-port $(PORT)
+	pio device monitor --port $(PORT)
+
+run-idf:
+	pio run -e $(BOARD_IDF) -t upload --upload-port $(PORT)
 	pio device monitor --port $(PORT)
 
 # live plot of magnetometer raw data (uses tools/plot_magnetometer.py)
