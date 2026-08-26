@@ -3,7 +3,15 @@
 - Enhance the gps_grid to avoid using uint8_t for just bits.
 - Add the support for the GPS module
 
-## Setup LSP Reproductible (clangd)
+## Setup LSP Reproductible (clangd
+
+To get clangd to work, do:
+
+```bash
+pio run -t compiledb
+```
+
+
 
 Pour reproduire la meme config IntelliSense sur une autre machine:
 
@@ -11,7 +19,6 @@ Pour reproduire la meme config IntelliSense sur une autre machine:
 2. Lancer:
 
 ```bash
-make lsp-setup
 ```
 
 Ce script:
@@ -23,7 +30,8 @@ Ce script:
 Ensuite, dans VS Code:
 
 1. Relancer clangd (`Restart language server`), ou
-2. Recharger la fenetre (`Reload Window`).
+2. Recharger la fenetre (`Reload Window`).)
+
 
 ## Configuration ESP32
 
